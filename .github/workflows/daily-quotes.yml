@@ -1,0 +1,51 @@
+# 每個交易日收盤後自動更新報價，在 GitHub 的雲端跑，不需要 Mac 開著。
+#
+# 報價來源是證交所與櫃買中心的官方開放資料（scripts/fetch_official.py），
+# 只用 Python 標準庫，不需要安裝任何套件。
+# 排在台灣時間 18:30，確保兩個市場當天的收盤資料都已經發布。
+#
+# 注意：這裡只自動化「數字」。關聯線的說法對不對，程式驗不出來，
+#       仍然要靠人工或 Claude 查證後改 chain.json 再推上來。
+name: 每日更新報價
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "30 10 * * 1-5"   # 台灣時間週一到五 18:30（GitHub 排程可能延遲數十分鐘）
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  quotes:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: 抓最新收盤（官方開放資料）
+        run: python scripts/fetch_official.py
+      - name: 自我檢查（不通過就不提交）
+        run: python scripts/verify.py
+      - name: 有變動才提交
+        id: commit
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/quotes.json data/history.json
+          if git diff --cached --quiet; then
+            echo "報價沒有變動，不提交"
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            git commit -m "每日報價 $(date -u +%F)"
+            git push
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+      # 用內建權杖推送的提交不會自動觸發其他流程，所以要明確叫發布流程起來
+      - name: 觸發發布
+        if: steps.commit.outputs.changed == 'true'
+        run: gh workflow run pages.yml --ref main
+        env:
+          GH_TOKEN: ${{ github.token }}

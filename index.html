@@ -1,0 +1,743 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>台股 AI 供應鏈地層剖面</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+:root{
+  --bg:#F7F6F2; --paper:#FFFFFF; --ink:#16181D; --ink2:#4E5464; --ink3:#6E7686;
+  --line:#E3E1DA; --line2:#CFCDC4;
+  /* 註解有三種語氣，各給一種顏色，不要全部塞成灰色 */
+  --note:#2F5D70;    --note-bg:#EDF4F7;  --note-line:#8FB8C8;   /* 解讀與提示 */
+  --warn:#8A4A0E;    --warn-bg:#FDF4E7;  --warn-line:#DFB472;   /* 容易誤讀的地方 */
+  --meta:#6E7686;                                               /* 資料口徑與來源 */
+  --L0:#3B3FC9; --L1:#5A4BD4; --L2:#0E7C93; --L3:#0E9A96; --L4:#1D9B58;
+  --L5:#6F9E12; --L6:#C99000; --L7:#E0611A; --L8:#D02C63; --L9:#8B3FC9;
+  --supply:#1D9B58; --alliance:#3B3FC9; --substitute:#E0611A; --crowding:#D02C63;
+  --equity:#8B3FC9; --group:#0E7C93;
+  --up:#D02C2C; --down:#0E8A4F;
+  --r:10px;
+  --sans:"Noto Sans TC","PingFang TC","Helvetica Neue",-apple-system,"Microsoft JhengHei",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg); color:var(--ink);
+  font:16.5px/1.6 var(--sans);
+  -webkit-font-smoothing:antialiased;
+}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+
+/* ---------- 版面 ---------- */
+.wrap{display:grid;grid-template-columns:186px minmax(0,1fr);gap:28px;max-width:1560px;margin:0 auto;padding:0 28px 120px}
+header.top{max-width:1560px;margin:0 auto;padding:34px 28px 22px}
+.kicker{font-size:12.5px;letter-spacing:.22em;color:var(--ink3);text-transform:uppercase}
+h1{font-size:30.5px;line-height:1.25;margin:8px 0 6px;letter-spacing:-.01em;font-weight:700}
+.lede{color:var(--ink2);max-width:58ch;font-size:15.5px;margin:0}
+.stamp{margin-top:12px;font-size:13.5px;color:var(--ink3)}
+.stamp b{color:var(--ink2);font-weight:600}
+.switch{display:inline-flex;border:1px solid var(--line2);border-radius:99px;overflow:hidden;margin-top:14px}
+.switch a{padding:6px 16px;font-size:14px;text-decoration:none;color:var(--ink2);background:var(--paper)}
+.switch a.now{background:var(--ink);color:#fff}
+.switch a:hover:not(.now){background:#EFEDE6;color:var(--ink)}
+
+/* ---------- 控制列 ---------- */
+.controls{max-width:1560px;margin:0 auto;padding:0 28px 18px;display:flex;flex-wrap:wrap;gap:20px;align-items:flex-end}
+.cgroup{display:flex;flex-direction:column;gap:7px}
+.clabel{font-size:12px;letter-spacing:.14em;color:var(--ink3);text-transform:uppercase}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line2);background:var(--paper);border-radius:99px;padding:5px 12px;font-size:14px;color:var(--ink2);transition:.14s}
+.chip:hover{border-color:var(--ink3);color:var(--ink)}
+.chip.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.chip .sw{display:inline-block;width:7px;height:7px;border-radius:99px;margin-right:6px;vertical-align:1px}
+#search{border:1px solid var(--line2);background:var(--paper);border-radius:99px;padding:6px 14px;font:inherit;font-size:14.5px;width:206px;outline:none}
+#search:focus{border-color:var(--ink)}
+
+/* ---------- 左側剖面尺標 ---------- */
+.rail{position:sticky;top:16px;align-self:start;height:max-content;padding-top:4px}
+.rail-t{font-size:12px;letter-spacing:.14em;color:var(--ink3);text-transform:uppercase;margin-bottom:10px}
+.rail a{display:flex;gap:8px;align-items:baseline;padding:5px 0;text-decoration:none;color:var(--ink2);font-size:14px;border-left:3px solid transparent;padding-left:9px;transition:.14s}
+.rail a:hover{color:var(--ink);background:#EFEDE6}
+.rail a .id{font-size:11.5px;color:var(--ink3);font-variant-numeric:tabular-nums;min-width:16px}
+.rail-note{margin-top:14px;padding-left:12px;font-size:12.5px;color:var(--ink3);line-height:1.5}
+
+/* ---------- 地層 ---------- */
+.strata{position:relative}
+#wires{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:5;overflow:visible}
+.layer{position:relative;margin-bottom:9px;border-radius:var(--r);background:var(--paper);border:1px solid var(--line);overflow:hidden;transition:opacity .2s}
+.layer.dim{opacity:.26}
+.lh2{margin:0;font-size:inherit;font-weight:inherit}
+.chtag{margin-left:9px;font-size:11.5px;font-weight:600;letter-spacing:.1em;color:var(--ink3);
+  border:1px solid var(--line2);border-radius:99px;padding:2px 8px;vertical-align:2px}
+.lhead{display:grid;grid-template-columns:52px minmax(0,1fr) auto;gap:16px;align-items:center;width:100%;padding:14px 18px;text-align:left;transition:background .14s}
+.card.std{background:#F3F1FB;border-style:dashed;border-color:#C9C2E8}
+.card.std .c-name{color:#4A3E8C}
+.card.seg{background:#F1F4F7;border-style:dashed}
+:focus-visible{outline:2px solid var(--ink);outline-offset:2px;border-radius:4px}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.fstate{font-size:13px;color:var(--ink3);margin-top:7px;display:flex;align-items:center;gap:10px}
+.fstate b{color:var(--ink);font-weight:650;font-variant-numeric:tabular-nums}
+.fclear{border:1px solid var(--line2);border-radius:99px;padding:2px 10px;font-size:13px;color:var(--ink2)}
+.fclear:hover{border-color:var(--ink);color:var(--ink)}
+.rail-chain{font-size:11px;letter-spacing:.14em;color:var(--ink3);text-transform:uppercase;
+  margin:11px 0 3px;padding-left:12px;border-top:1px solid var(--line);padding-top:9px}
+.rail-chain:first-child{border-top:0;margin-top:0;padding-top:0}
+.loadfail{background:var(--paper);border:1px solid var(--line2);border-left:3px solid var(--L8);
+  border-radius:var(--r);padding:20px 22px;font-size:15px;line-height:1.7;color:var(--ink2);max-width:66ch}
+.loadfail b{color:var(--ink);font-size:16.5px}
+.loadfail p{margin:9px 0 0}
+.loadfail code{font:600 14px var(--mono);background:#F1EFE8;padding:2px 6px;border-radius:4px}
+.loadfail .err{font:13.5px var(--mono);color:var(--ink3);margin-top:12px}
+.snapshot{background:#FFF6E8;border:1px solid #E8C98A;border-radius:8px;padding:10px 14px;
+  font-size:14px;color:#6B4E12;line-height:1.6;max-width:1560px;margin:0 auto 18px;
+  margin-left:28px;margin-right:28px}
+.snapshot b{font-weight:700}
+.lhead:hover{background:#FAF9F5}
+.lid{font:600 13.5px/1 var(--mono);letter-spacing:.06em;color:#fff;background:var(--c);border-radius:5px;padding:6px 0;text-align:center}
+.lname{font-size:18px;font-weight:650;letter-spacing:-.005em}
+.lsub{font-size:14px;color:var(--ink3);margin-top:1px}
+.lmeta{display:flex;align-items:center;gap:14px}
+.lcount{font:600 13.5px/1 var(--mono);color:var(--ink3);font-variant-numeric:tabular-nums}
+.caret{width:9px;height:9px;border-right:1.6px solid var(--ink3);border-bottom:1.6px solid var(--ink3);transform:rotate(45deg);transition:transform .2s;margin-bottom:3px}
+.layer.open .caret{transform:rotate(-135deg);margin-bottom:-3px}
+.bar{height:3px;background:var(--c)}
+.peek{display:flex;flex-wrap:wrap;gap:5px;padding:0 18px 13px 86px}
+.layer.open .peek{display:none}
+.pk{font-size:13px;color:var(--ink3);border:1px solid var(--line);border-radius:99px;padding:2px 9px}
+.body{display:none;padding:4px 18px 18px 18px;border-top:1px solid var(--line);background:#FCFBF8}
+.layer.open .body{display:block}
+/* 每層的論點。它不是附註而是這層的主張，給它一塊自己的地 */
+.lnote{font-size:14.5px;color:var(--ink2);line-height:1.75;max-width:74ch;margin:14px 0 18px;
+  padding:11px 14px;border-left:3px solid var(--c);border-radius:0 7px 7px 0;
+  background:color-mix(in srgb,var(--c) 5%,#fff)}
+.lnote b{color:var(--ink);font-weight:700}
+
+.group{margin-bottom:16px}
+.gname{font-size:12.5px;letter-spacing:.12em;color:var(--ink3);text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:9px}
+.gname::after{content:"";flex:1;height:1px;background:var(--line)}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(196px,1fr));gap:7px}
+
+.card{position:relative;text-align:left;border:1px solid var(--line);background:var(--paper);border-radius:8px;padding:9px 11px;transition:.14s;overflow:hidden}
+.card:hover{border-color:var(--ink3);transform:translateY(-1px)}
+.card.ext{background:repeating-linear-gradient(135deg,#F4F3EE,#F4F3EE 5px,#EDEBE4 5px,#EDEBE4 10px);border-style:dashed}
+.card.sel{border-color:var(--ink);border-width:2px;padding:8px 10px;box-shadow:0 3px 14px rgba(0,0,0,.11)}
+.card.rel{border-color:var(--c);background:color-mix(in srgb,var(--c) 7%,#fff)}
+.card.mute{opacity:.2}
+.c-top{display:flex;align-items:baseline;gap:7px}
+.c-code{font:600 12.5px/1 var(--mono);color:var(--ink3);font-variant-numeric:tabular-nums}
+.c-name{font-size:15.5px;font-weight:640;letter-spacing:-.005em}
+.c-role{font-size:13px;color:var(--ink3);line-height:1.45;margin-top:3px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.c-q{display:flex;align-items:baseline;gap:7px;margin-top:6px;font-variant-numeric:tabular-nums}
+.c-px{font:600 14px/1 var(--mono)}
+.c-ch{font:600 12.5px/1 var(--mono)}
+.up{color:var(--up)} .down{color:var(--down)} .flat{color:var(--ink3)}
+.c-dots{position:absolute;top:9px;right:9px;display:flex;gap:2px}
+.dot{width:4px;height:4px;border-radius:99px;background:var(--line2)}
+.dot.f{background:var(--c)}
+.c-tag{display:inline-block;margin-top:6px;font-size:11.5px;letter-spacing:.06em;padding:1px 6px;border-radius:3px;background:var(--c);color:#fff;opacity:.9}
+
+/* ---------- 右側詳情 ---------- */
+.panel{position:fixed;top:0;right:0;width:416px;max-width:92vw;height:100vh;background:var(--paper);border-left:1px solid var(--line2);box-shadow:-14px 0 44px rgba(0,0,0,.09);transform:translateX(102%);transition:transform .26s cubic-bezier(.4,0,.2,1);z-index:40;display:flex;flex-direction:column}
+.panel.on{transform:none}
+body.shift .wrap,body.shift .controls,body.shift header.top,body.shift footer{padding-right:444px;transition:padding .26s}
+@media(max-width:1100px){body.shift .wrap,body.shift .controls,body.shift header.top,body.shift footer{padding-right:28px}}
+.p-head{padding:20px 22px 15px;border-bottom:1px solid var(--line);position:relative}
+.p-close{position:absolute;top:15px;right:16px;font-size:20.5px;color:var(--ink3);line-height:1;padding:4px}
+.p-close:hover{color:var(--ink)}
+.p-layer{font-size:12px;letter-spacing:.13em;text-transform:uppercase;color:var(--c);font-weight:700}
+.p-name{font-size:23.5px;font-weight:700;margin:5px 0 2px;letter-spacing:-.01em}
+.p-code{font:600 13.5px/1 var(--mono);color:var(--ink3)}
+.p-role{font-size:14.5px;color:var(--ink2);margin-top:9px;line-height:1.65}
+.p-body{flex:1;overflow-y:auto;padding:18px 22px 40px}
+.sect{margin-bottom:22px}
+.sect-t{font-size:12px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink3);margin-bottom:10px;display:flex;align-items:center;gap:9px}
+.sect-t::after{content:"";flex:1;height:1px;background:var(--line)}
+.metric{display:grid;grid-template-columns:64px 1fr 26px;gap:9px;align-items:center;margin-bottom:7px;font-size:13.5px}
+.metric .mn{color:var(--ink2)}
+.track{height:5px;background:#EDEBE4;border-radius:99px;overflow:hidden}
+.fill{height:100%;background:var(--c);border-radius:99px}
+.metric .mv{font:600 12.5px/1 var(--mono);color:var(--ink3);text-align:right}
+/* 解讀提示。這是面板上最該被讀到的一段，不能長得像被淡化的附註 */
+.mhint{font-size:13.5px;color:var(--note);line-height:1.65;margin-top:10px;
+  background:var(--note-bg);border-left:2px solid var(--note-line);border-radius:0 6px 6px 0;padding:9px 12px}
+.mhint b{color:var(--note);font-weight:700}
+/* 口徑與來源說明，語氣要比解讀更輕 */
+.mhint.meta{background:none;border-left:0;padding:2px 0 0;color:var(--meta);font-size:12.5px}
+/* 方向會被讀反、數字會過期這類地方，用警示色 */
+.warn{display:block;margin-top:7px;color:var(--warn);background:var(--warn-bg);
+  border-left:2px solid var(--warn-line);border-radius:0 6px 6px 0;padding:8px 12px;font-size:13.5px;line-height:1.6}
+.warn b{color:var(--warn);font-weight:700}
+.xlayers{display:flex;flex-direction:column;gap:4px}
+.xl{display:flex;align-items:center;gap:8px;width:100%;text-align:left;border:1px solid var(--line);
+    border-left:3px solid var(--c);border-radius:6px;padding:6px 9px;font-size:14px;background:var(--paper);transition:.14s}
+.xl:hover{border-color:var(--ink3);border-left-color:var(--c);background:#FAF9F5}
+.xl.here{background:color-mix(in srgb,var(--c) 8%,#fff);font-weight:650}
+.xl .xid{font:600 11.5px/1 var(--mono);color:#fff;background:var(--c);border-radius:4px;padding:4px 5px}
+.xl i{font-style:normal;margin-left:auto;font-size:11.5px;color:var(--ink3);letter-spacing:.08em}
+.qgrid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:7px;overflow:hidden}
+.qcell{background:var(--paper);padding:9px 11px}
+.qk{font-size:12px;color:var(--ink3)}
+.qv{font:600 16.5px/1.3 var(--mono);font-variant-numeric:tabular-nums;margin-top:2px}
+.rel-t{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:700;margin:14px 0 7px}
+.rel-t .sw{width:16px;height:2px;border-radius:2px}
+.rel{display:block;width:100%;text-align:left;border:1px solid var(--line);border-radius:7px;padding:8px 10px;margin-bottom:5px;transition:.14s;background:var(--paper)}
+.rel:hover{border-color:var(--ink3);background:#FAF9F5}
+.rel .rn{font-size:14.5px;font-weight:620}
+.rel .rn i{font-style:normal;font:600 12px var(--mono);color:var(--ink3);margin-left:5px}
+.rel .rd{font-size:13px;color:var(--ink3);line-height:1.5;margin-top:2px}
+.rel .rdir{font-size:11.5px;color:var(--ink3);letter-spacing:.08em}
+.conf{margin-left:6px;font-size:11px;font-weight:700;letter-spacing:.05em;padding:1px 5px;border-radius:3px;vertical-align:1px}
+.conf.disclosed{background:#E4F3EA;color:#0E6B3C}
+.conf.reported{background:#FDF0DC;color:#8A5A00}
+.conf.inferred{background:#FBE4EC;color:#96234B}
+.conf.common{background:#EDEBE4;color:#5A6070}
+.refs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}
+.ref{border:1px dashed var(--line2);background:#FAF9F5;border-radius:7px;padding:7px 11px;font-size:14px;color:var(--ink2);transition:.14s}
+.ref:hover{border-color:var(--ink3);color:var(--ink)}
+.ref b{font-weight:650;color:var(--ink)}
+.ref .rc{font:600 12px var(--mono);color:var(--ink3);margin-left:5px}
+.refnote{font-size:13.5px;color:var(--note);line-height:1.65;margin-bottom:9px;max-width:70ch;
+  background:var(--note-bg);border-left:2px solid var(--note-line);border-radius:0 6px 6px 0;padding:8px 12px}
+.empty{font-size:14px;color:var(--ink3);padding:10px 0}
+footer{max-width:1560px;margin:0 auto;padding:22px 28px 60px;font-size:13.5px;color:var(--ink2);line-height:1.8;border-top:1px solid var(--line)}
+footer b{color:var(--ink);font-weight:700}
+footer code{font:600 13px var(--mono);background:#EFEDE6;padding:2px 6px;border-radius:4px;color:var(--ink2)}
+@media(max-width:900px){.wrap{grid-template-columns:1fr}.rail{display:none}}
+
+/* ---------- 跑馬燈：最新查證 ----------
+   個股資料層層疊疊，看的人分不出哪些是新的。這一條只放「最近查證過的變動」，
+   每則都連到原始來源，點文字會跳到相關個股。資料在 data/updates.json。 */
+.ticker{max-width:1560px;margin:0 auto 16px;padding:0 28px;display:flex;align-items:stretch}
+.tk-head{flex:none;display:flex;align-items:center;gap:8px;padding:0 12px 0 14px;background:var(--ink);color:#fff;border-radius:9px 0 0 9px}
+.tk-label{font-size:13px;font-weight:700;letter-spacing:.08em}
+.tk-date{font:600 11.5px var(--mono);opacity:.72}
+.tk-toggle{font-size:11.5px;color:#fff;border:1px solid rgba(255,255,255,.35);border-radius:99px;padding:1px 9px}
+.tk-toggle:hover{border-color:#fff}
+.tk-viewport{flex:1;min-width:0;overflow:hidden;background:var(--paper);border:1px solid var(--line);border-left:0;border-radius:0 9px 9px 0;
+  -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 20px,#000 calc(100% - 36px),transparent);
+          mask-image:linear-gradient(90deg,transparent 0,#000 20px,#000 calc(100% - 36px),transparent)}
+.tk-track{display:flex;width:max-content;animation:tk-roll 60s linear infinite}
+.ticker:hover .tk-track,.ticker:focus-within .tk-track,.ticker.paused .tk-track{animation-play-state:paused}
+@keyframes tk-roll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.tk-list{display:flex;align-items:center;gap:28px;list-style:none;margin:0;padding:9px 28px 9px 18px}
+.tk-item{display:flex;align-items:center;gap:8px;white-space:nowrap}
+.tk-tag{font-size:11px;font-weight:700;padding:2px 6px;border-radius:4px;letter-spacing:.04em}
+.tk-new{background:var(--note-bg);color:var(--note)}
+.tk-fix{background:var(--warn-bg);color:var(--warn)}
+.tk-news{background:#EDEBE4;color:var(--ink2)}
+.tk-text{font-size:14px;color:var(--ink);padding:0;border-bottom:1px dashed transparent}
+.tk-text:hover{border-bottom-color:var(--ink3)}
+.tk-src{font-size:12.5px;color:var(--note);text-decoration:none;border-bottom:1px solid var(--note-line)}
+.tk-src:hover{color:var(--ink)}
+@media(prefers-reduced-motion:reduce){
+  .tk-track{animation:none}.tk-viewport{overflow-x:auto}
+  .tk-list[aria-hidden]{display:none}.tk-toggle{display:none}}
+@media(max-width:700px){.ticker{padding:0 16px}.tk-date{display:none}}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="kicker">錢流剖面 · 純台股</div>
+  <h1>台股 AI 供應鏈地層剖面</h1>
+  <p class="lede">十層依照<b>錢的流向</b>排列，不是技術堆疊。十層分屬三條鏈：<b>需求與變現</b>是錢的出口與回收，<b>硬體製造</b>是把錢變成晶片與伺服器，<b>基礎設施</b>是讓算力能開機的電、熱與網路。<b>同一條鏈之內上下才是真的上下游，跨鏈之間只是排版順序</b>。重電不是記憶體的下游，它們平行發生。</p>
+  <div class="stamp">行情更新 <b id="stamp">載入中</b> · 證交所、櫃買中心收盤資料 · 產業關係為公開資訊整理，僅供研究，非投資建議</div>
+  <div class="switch"><a href="signals.html">市場訊號</a><a href="index.html" class="now" aria-current="page">地層剖面</a><a href="rings.html">爆炸環</a></div>
+</header>
+
+<section class="ticker" id="ticker" aria-label="最新查證的更新">
+  <div class="tk-head"><span class="tk-label">最新查證</span><span class="tk-date" id="tkDate"></span>
+    <button class="tk-toggle" id="tkToggle" aria-pressed="false">暫停</button></div>
+  <div class="tk-viewport"><div class="tk-track" id="tkTrack"></div></div>
+</section>
+
+
+<div class="controls">
+  <div class="cgroup">
+    <div class="clabel">巨頭視角 一鍵展開整條鏈</div>
+    <div class="chips" id="lens"></div>
+  </div>
+  <div class="cgroup">
+    <div class="clabel">當前瓶頸主題 點一次亮出整個族群</div>
+    <div class="chips" id="themes"></div>
+  </div>
+  <div class="cgroup">
+    <div class="clabel">關聯線型</div>
+    <div class="chips" id="etypes"></div>
+  </div>
+  <div class="cgroup">
+    <div class="clabel">篩選</div>
+    <div class="chips">
+      <button class="chip" data-f="purity">含金量 4 以上</button>
+      <button class="chip" data-f="bottleneck">瓶頸環節 4 以上</button>
+      <button class="chip" data-f="cross">跨層公司</button>
+      <button class="chip" data-f="all">全部展開</button>
+    </div>
+  </div>
+  <div class="cgroup">
+    <label class="clabel" for="search">搜尋</label>
+    <input id="search" type="search" placeholder="代號或公司名" autocomplete="off">
+  </div>
+</div>
+<div class="controls" style="padding-top:0">
+  <div class="fstate" role="status" aria-live="polite">
+    <span id="fcount">顯示全部 <b>138</b> 檔台股</span>
+    <button class="fclear" id="fclear" hidden>清除全部篩選</button>
+  </div>
+</div>
+
+<div class="wrap">
+  <nav class="rail">
+    <div class="rail-t">剖面尺標</div>
+    <div id="rail"></div>
+    <div class="rail-note">點層展開，點個股看關聯鏈路。按 Esc 清除選取。</div>
+  </nav>
+  <main class="strata" id="strata"><svg id="wires"></svg></main>
+</div>
+
+<aside class="panel" id="panel" role="dialog" aria-modal="false" aria-labelledby="pname" aria-hidden="true" tabindex="-1">
+  <div class="p-head">
+    <button class="p-close" id="pclose" aria-label="關閉詳情">&times;</button>
+    <div class="p-layer" id="player"></div>
+    <div class="p-name" id="pname"></div>
+    <div class="p-code" id="pcode"></div>
+    <div class="p-role" id="prole"></div>
+  </div>
+  <div class="p-body" id="pbody"></div>
+</aside>
+
+<footer>
+  含金量、瓶頸度、可替代性為 1 到 5 的主觀評分，用來判斷同一層裡誰比較純、誰比較有定價權，不是公司揭露數字。<br>
+  關係分六種：<b>供應</b>是實體出貨，<b>綁定</b>是共同設計或獨家，<b>替代</b>是彼此競爭的平行路線，<b>排擠</b>是前者吃掉產能導致後者漲價的間接受惠，<b>持股</b>是資本關係不必然有出貨，<b>同集團</b>是同一個母集團或分割出來的公司。外面的供應鏈圖多半只畫供應這一種，這也是為什麼看起來每張圖都對，串起來卻互相矛盾。<br>
+  每一條關聯線都標了可信度，沒有例外：<span class="conf disclosed">已揭露</span>是公司或官方講的，<span class="conf reported">媒體報導</span>是媒體與法人講的但公司沒證實，<span class="conf inferred">產業推測</span>是從技術規格、產能配置或客戶結構反推出來的，<span class="conf common">產業共識</span>是多方報導一致且長期成立但沒有單一權威出處。推測級的線可以拿來想，不能拿來當進場理由。<br>
+  三個評分的定義寫在資料的 <code>meta.rubric</code>，面板上把游標移到評分名稱可以看到每一分代表什麼。注意<b>可替代性的方向與另外兩項相反，數字越大代表越容易被換掉</b>。
+</footer>
+
+<script>
+const S = { chain:null, quotes:{}, sel:null, theme:null, filter:null,
+            etypes:new Set(['supply','alliance','substitute','crowding','equity','group']) };
+const byCode = new Map();      // code -> {node, layer, group}
+const elByCode = new Map();    // code -> card element
+const $ = s => document.querySelector(s);
+const ETL = { supply:'供應', alliance:'綁定', substitute:'替代', crowding:'排擠', equity:'持股', group:'同集團' };
+const ETORDER = ['group','equity','alliance','supply','substitute','crowding'];
+const CONF = { disclosed:'已揭露', reported:'媒體報導', inferred:'產業推測', common:'產業共識' };
+
+/* 資料來源有兩種：本機開發時用 fetch 讀 data/，單檔分享版直接內嵌在頁面裡。
+   兩種模式共用同一份程式，不維護兩套。 */
+
+/* 跑馬燈。複製一份接在後面做無縫循環，複製的那份對螢幕閱讀器隱藏、也不進鍵盤順序 */
+const TK_TAG={new:'新增',fix:'修正',news:'動態'};
+function renderTicker(u, go){
+  const box=document.getElementById('ticker');
+  if(!u||!u.items||!u.items.length){ box.hidden=true; return; }
+  const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const latest=u.items.map(i=>i.date).sort().pop();
+  document.getElementById('tkDate').textContent=latest.slice(5).replace('-','/')+' 查證';
+  const li=(i,dup)=>{ const off=dup?' tabindex="-1"':'';
+    return `<li class="tk-item"><span class="tk-tag tk-${esc(i.tag)}">${TK_TAG[i.tag]||esc(i.tag)}</span>`
+      +`<button class="tk-text"${off} data-go="${esc((i.codes||[])[0]||'')}">${esc(i.text)}</button>`
+      +`<a class="tk-src" href="${esc(i.url)}" target="_blank" rel="noopener noreferrer"${off}>${esc(i.source)}<span aria-hidden="true"> ↗</span></a></li>`; };
+  const list=dup=>`<ul class="tk-list"${dup?' aria-hidden="true"':''}>${u.items.map(i=>li(i,dup)).join('')}</ul>`;
+  const track=document.getElementById('tkTrack');
+  track.innerHTML=list(false)+list(true);
+  track.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{ if(b.dataset.go) go(b.dataset.go); });
+  // 速度固定每秒 36px：消息越多就跑越久，而不是越多跑越快
+  requestAnimationFrame(()=>{ track.style.animationDuration=Math.max(30,track.scrollWidth/2/36)+'s'; });
+  const t=document.getElementById('tkToggle');
+  t.onclick=()=>{ const p=box.classList.toggle('paused'); t.setAttribute('aria-pressed',p); t.textContent=p?'播放':'暫停'; };
+}
+
+function load(id, path){
+  const el = document.getElementById(id);
+  if(el) return Promise.resolve(JSON.parse(el.textContent));
+  // 加上時間戳，否則每天更新完報價，瀏覽器還是拿快取裡的舊數字
+  return fetch(`${path}?t=${Date.now()}`,{cache:'no-store'})
+    .then(r=>{ if(!r.ok) throw new Error(r.status); return r.json(); });
+}
+Promise.all([
+  load('chain-data','data/chain.json'),
+  load('quotes-data','data/quotes.json').catch(()=>({quotes:{},updatedAt:'未更新'})),
+  load('updates-data','data/updates.json').catch(()=>null)
+]).then(([chain,q,upd])=>{
+  S.chain = chain; S.quotes = q.quotes||{};
+  $('#stamp').textContent = q.updatedAt || '未更新';
+  index(); render(); buildRail(); buildLens(); buildEtypes(); buildThemes(); updateCount();
+  renderTicker(upd, c=>{ if(byCode.has(c)) select(c,true); });
+}).catch(err=>{
+  $('#strata').innerHTML = `<div class="loadfail"><b>資料載入失敗</b>
+    <p>讀不到 data/chain.json。這個頁面必須透過 http 開啟，直接用瀏覽器開檔案會被瀏覽器擋下。</p>
+    <p>請先執行 <code>python3 scripts/serve.py 8099</code>，再開 http://localhost:8099</p>
+    <p class="err">${String(err)}</p></div>`;
+});
+
+function index(){
+  S.chain.layers.forEach(L=>L.groups.forEach(G=>G.nodes.forEach(n=>byCode.set(n.code,{n,L,G}))));
+  S.edges = S.chain.edges.filter(e=>byCode.has(e.from)&&byCode.has(e.to));
+}
+function edgesOf(code){ return S.edges.filter(e=>e.from===code||e.to===code); }
+function quoteOf(code){ return S.quotes[code]; }
+
+/* ---------- 渲染地層 ---------- */
+function render(){
+  const strata = $('#strata');
+  S.chain.layers.forEach(L=>{
+    const el = document.createElement('section');
+    el.className='layer'; el.id='lay-'+L.id;
+    el.style.setProperty('--c',`var(--${L.id})`);
+    const all = L.groups.flatMap(g=>g.nodes);
+    const tw = all.filter(n=>!n.ext);
+    const peek = all.filter(n=>n.ext||(n.purity||0)>=4).slice(0,7);
+
+    const ch = S.chain.meta.chains[L.chain];
+    el.dataset.chain = L.chain;
+    el.innerHTML = `
+      <div class="bar"></div>
+      <h2 class="lh2"><button class="lhead" aria-expanded="false">
+        <div class="lid">${L.id}</div>
+        <div><div class="lname">${L.name}<span class="chtag">${ch.label}</span></div>
+             <div class="lsub">${L.sub}</div></div>
+        <div class="lmeta"><span class="lcount">${tw.length ? tw.length+' 檔台股' : '無台股標的'}</span><span class="caret"></span></div>
+      </button></h2>
+      <div class="peek">${peek.map(n=>`<span class="pk">${n.name}</span>`).join('')}</div>
+      <div class="body"><div class="lnote">${L.note}</div><div class="groups"></div></div>`;
+
+    const gw = el.querySelector('.groups');
+    L.groups.forEach(G=>{
+      const gd = document.createElement('div'); gd.className='group';
+      gd.innerHTML = `<div class="gname">${G.name}</div><div class="cards"></div>`;
+      const cw = gd.querySelector('.cards');
+      G.nodes.forEach(n=>cw.appendChild(card(n,L)));
+      // 跨層參照：主節點在別層，但這層的邏輯少了它會不完整
+      if(G.refs && G.refs.length){
+        const rw=document.createElement('div');
+        rw.innerHTML = (G.refNote?`<div class="refnote">${G.refNote}</div>`:'')+
+          `<div class="refs">${G.refs.filter(c=>byCode.has(c)).map(c=>
+            `<button class="ref" data-go="${c}">參照　<b>${byCode.get(c).n.name}</b><span class="rc">${c}</span></button>`
+          ).join('')}</div>`;
+        gd.insertBefore(rw, gd.querySelector('.cards'));
+      }
+      gw.appendChild(gd);
+    });
+
+    el.querySelectorAll('.ref[data-go]').forEach(b=>b.onclick=e=>{ e.stopPropagation(); select(b.dataset.go); });
+    const head = el.querySelector('.lhead');
+    head.onclick = ()=>{ const open = el.classList.toggle('open');
+      head.setAttribute('aria-expanded', String(open)); redraw(); };
+    strata.appendChild(el);
+  });
+}
+
+function card(n,L){
+  const b=document.createElement('button');
+  b.className='card'+(n.ext?' ext':'')+(n.kind==='standard'?' std':'')+(n.kind==='segment'?' seg':'');
+  b.dataset.code=n.code; b.dataset.kind=n.kind||'company';
+  b.style.setProperty('--c',`var(--${L.id})`);
+  const q=quoteOf(n.code);
+  let qh='';
+  if(q && q.close!=null){
+    const c=q.changePct, cl=c>0?'up':c<0?'down':'flat', sg=c>0?'+':'';
+    qh=`<div class="c-q"><span class="c-px">${q.close}</span><span class="c-ch ${cl}">${sg}${c==null?'—':c.toFixed(2)}%</span></div>`;
+  }
+  const dots = n.ext ? '' :
+    `<div class="c-dots">${[1,2,3,4,5].map(i=>`<span class="dot ${i<=(n.purity||0)?'f':''}"></span>`).join('')}</div>`;
+  b.innerHTML = `${dots}
+    <div class="c-top">${n.ext?'':`<span class="c-code">${n.code}</span>`}<span class="c-name">${n.name}</span></div>
+    <div class="c-role">${n.role||''}</div>${qh}
+    ${n.kind==='standard'?'<span class="c-tag">技術架構</span>'
+     :n.kind==='segment'?'<span class="c-tag">需求類型</span>'
+     :n.ext?'<span class="c-tag">外部錨點</span>'
+     :(n.cross?`<span class="c-tag">${n.cross.join('·')}</span>`:'')}`;
+  b.onclick = e=>{ e.stopPropagation(); select(n.code); };
+  elByCode.set(n.code,b);
+  return b;
+}
+
+/* ---------- 側欄與控制列 ---------- */
+function buildRail(){
+  // 依三條鏈分段。同一段之內上下是真的上下游，跨段之間只是排版順序
+  const order=['demand','hardware','infra'], seen=new Set();
+  $('#rail').innerHTML = order.map(ck=>{
+    const ls=S.chain.layers.filter(L=>L.chain===ck && !seen.has(L.id));
+    ls.forEach(L=>seen.add(L.id));
+    return `<div class="rail-chain">${S.chain.meta.chains[ck].label}</div>` + ls.map(L=>
+      `<a href="#lay-${L.id}" style="border-left-color:var(--${L.id})"><span class="id">${L.id}</span>${L.name}</a>`
+    ).join('');
+  }).join('');
+}
+function buildLens(){
+  [['NVDA','輝達'],['AMD','超微'],['AVGO','博通'],['2330','台積電'],['2317','鴻海'],['HYNIX','HBM 三強'],['2454','聯發科']]
+   .forEach(([code,label])=>{
+    const b=document.createElement('button'); b.className='chip'; b.textContent=label;
+    b.onclick=()=>select(code,true); $('#lens').appendChild(b);
+  });
+}
+function buildThemes(){
+  (S.chain.themes||[]).forEach(t=>{
+    const b=document.createElement('button'); b.className='chip'; b.textContent=t.name;
+    b.dataset.theme=t.id; b.onclick=()=>selectTheme(t.id); $('#themes').appendChild(b);
+  });
+}
+function buildEtypes(){
+  Object.entries(ETL).forEach(([k,label])=>{
+    const b=document.createElement('button'); b.className='chip on';
+    b.innerHTML=`<span class="sw" style="background:var(--${k})"></span>${label}`;
+    b.onclick=()=>{ S.etypes.has(k)?S.etypes.delete(k):S.etypes.add(k); b.classList.toggle('on'); redraw(); if(S.sel)fillPanel(S.sel); };
+    $('#etypes').appendChild(b);
+  });
+}
+
+/* ---------- 選取與高亮 ---------- */
+function select(code, scroll){
+  if(S.sel===code){ clear(); return; }
+  S.sel=code; S.theme=null;
+  document.querySelectorAll('[data-theme]').forEach(b=>b.classList.remove('on'));
+  const es = edgesOf(code).filter(e=>S.etypes.has(e.type));
+  const rel = new Set(es.map(e=>e.from===code?e.to:e.from));
+
+  // 展開所有牽涉到的層，否則連線畫不出來
+  const need = new Set([byCode.get(code).L.id, ...[...rel].map(c=>byCode.get(c).L.id)]);
+  document.querySelectorAll('.layer').forEach(el=>{
+    const id = el.id.slice(4);
+    el.classList.toggle('open', need.has(id));
+    el.classList.toggle('dim', !need.has(id));
+  });
+  elByCode.forEach((el,c)=>{
+    el.classList.toggle('sel', c===code);
+    el.classList.toggle('rel', rel.has(c));
+    el.classList.toggle('mute', c!==code && !rel.has(c));
+  });
+
+  fillPanel(code); openPanel(); updateCount();
+  requestAnimationFrame(()=>{
+    if(scroll!==false) elByCode.get(code).scrollIntoView({behavior:'smooth',block:'center'});
+    redraw();
+    // 面板推開版面會改變寬度，等版面過渡完再重畫一次
+    [120,300,560].forEach(t=>setTimeout(redraw,t));
+  });
+}
+/* 主題視角：一次亮出一整個瓶頸族群，不畫連線，看的是分布在哪幾層 */
+function selectTheme(id){
+  if(S.theme===id){ clear(); return; }
+  clear(); S.theme=id;
+  const t=S.chain.themes.find(x=>x.id===id);
+  const set=new Set(t.codes.filter(c=>byCode.has(c)));
+  const need=new Set([...set].map(c=>byCode.get(c).L.id));
+  document.querySelectorAll('[data-theme]').forEach(b=>b.classList.toggle('on',b.dataset.theme===id));
+  document.querySelectorAll('.layer').forEach(el=>{
+    const lid=el.id.slice(4);
+    el.classList.toggle('open', need.has(lid));
+    el.classList.toggle('dim', !need.has(lid));
+  });
+  elByCode.forEach((el,c)=>{ el.classList.toggle('rel',set.has(c)); el.classList.toggle('mute',!set.has(c)); });
+
+  const byLayer={};
+  set.forEach(c=>{ const {L}=byCode.get(c); (byLayer[L.id]=byLayer[L.id]||{name:L.name,codes:[]}).codes.push(c); });
+  $('#player').textContent='瓶頸主題';
+  $('#pname').textContent=t.name;
+  $('#pcode').textContent=`${set.size} 檔台股，分布在 ${Object.keys(byLayer).length} 層`;
+  $('#prole').textContent=t.note;
+  $('#panel').style.setProperty('--c','var(--ink)');
+  $('#pbody').innerHTML = Object.entries(byLayer).sort().map(([lid,g])=>
+    `<div class="sect"><div class="sect-t">${lid} ${g.name}</div>${
+      g.codes.map(c=>{const n=byCode.get(c).n,q=quoteOf(c);
+        return `<button class="rel" data-go="${c}"><div class="rn">${n.name}<i>${c}</i></div>
+          <div class="rd">${n.role||''}</div>
+          <div class="rdir">${q?`收盤 ${q.close}　瓶頸度 ${n.bottleneck||'—'}　含金量 ${n.purity||'—'}`:''}</div></button>`;
+      }).join('')}</div>`).join('');
+  $('#pbody').querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>select(b.dataset.go));
+  openPanel(); updateCount();
+}
+
+/* 抽屜開啟時把焦點送進去，關閉時送回原本那張卡片，鍵盤使用者才不會迷路 */
+function openPanel(){
+  S.lastFocus = document.activeElement;
+  $('#panel').classList.add('on'); document.body.classList.add('shift');
+  $('#panel').setAttribute('aria-hidden','false');
+  requestAnimationFrame(()=>$('#pclose').focus({preventScroll:true}));
+}
+function clear(){
+  const wasOpen=$('#panel').classList.contains('on'), back=S.sel&&elByCode.get(S.sel);
+  S.sel=null; S.theme=null; $('#panel').classList.remove('on'); document.body.classList.remove('shift');
+  $('#panel').setAttribute('aria-hidden','true');
+  document.querySelectorAll('[data-theme]').forEach(b=>b.classList.remove('on'));
+  document.querySelectorAll('.layer').forEach(el=>el.classList.remove('dim'));
+  elByCode.forEach(el=>el.classList.remove('sel','rel','mute'));
+  redraw(); updateCount();
+  if(wasOpen){ const t = back && back.offsetParent ? back : S.lastFocus;
+    if(t && t.focus) t.focus({preventScroll:true}); }
+}
+
+/* ---------- 連線 ---------- */
+function redraw(){
+  const svg=$('#wires'); svg.innerHTML='';
+  if(!S.sel) return;
+  const box=$('#strata').getBoundingClientRect();
+  const a=elByCode.get(S.sel); if(!a||!a.offsetParent) return;
+  const ar=a.getBoundingClientRect();
+  const ax=ar.left-box.left+ar.width/2, ay=ar.top-box.top+ar.height/2;
+
+  const add=(tag,attrs)=>{const el=document.createElementNS('http://www.w3.org/2000/svg',tag);
+    for(const k in attrs) el.setAttribute(k,attrs[k]); svg.appendChild(el); return el;};
+
+  edgesOf(S.sel).filter(e=>S.etypes.has(e.type)).forEach(e=>{
+    const other = e.from===S.sel ? e.to : e.from;
+    const b=elByCode.get(other); if(!b||!b.offsetParent) return;
+    const br=b.getBoundingClientRect();
+    const bx=br.left-box.left+br.width/2, by=br.top-box.top+br.height/2;
+    // 垂直 S 曲線：地層是上下堆疊，讓線沿著層與層之間流動而不是繞到版面外
+    const dy=by-ay, k=Math.max(38, Math.abs(dy)*0.42);
+    const d = Math.abs(dy) < 26
+      ? `M${ax},${ay} C${ax},${ay-46} ${bx},${by-46} ${bx},${by}`     // 同層內走上方拱橋
+      : `M${ax},${ay} C${ax},${ay+Math.sign(dy)*k} ${bx},${by-Math.sign(dy)*k} ${bx},${by}`;
+    const p=add('path',{d,fill:'none',stroke:`var(--${e.type})`,'stroke-width':1.7,
+                        'stroke-linecap':'round',opacity:.58});
+    if(e.type==='substitute') p.setAttribute('stroke-dasharray','7 5');
+    if(e.type==='crowding')   p.setAttribute('stroke-dasharray','2 5');
+    if(e.type==='equity')     p.setAttribute('stroke-dasharray','10 3 2 3');
+    if(e.type==='group')      p.setAttribute('stroke-dasharray','3 3');
+    add('circle',{cx:bx,cy:by,r:3,fill:`var(--${e.type})`,opacity:.85});
+  });
+  add('circle',{cx:ax,cy:ay,r:4.5,fill:'var(--ink)'});
+}
+addEventListener('scroll',redraw,{passive:true});
+addEventListener('resize',redraw);
+// 展開層、面板推開版面都會改變高度，靠 ResizeObserver 補畫，避免連線畫在舊座標上
+new ResizeObserver(()=>redraw()).observe($('#strata'));
+
+/* ---------- 詳情面板 ---------- */
+function fillPanel(code){
+  const {n,L,G}=byCode.get(code);
+  const p=$('#panel'); p.style.setProperty('--c',`var(--${L.id})`);
+  $('#player').textContent=`${L.id} ${L.name} · ${G.name}`;
+  $('#pname').textContent=n.name;
+  $('#pcode').textContent=n.ext?'外部錨點 · 非台股，不列代號':`${code} · ${quoteOf(code)?.symbol||''}`;
+  $('#prole').textContent=n.role||'';
+
+  const q=quoteOf(code); let h='';
+
+  if(n.cross && n.cross.length>1){
+    const others=n.cross.filter(x=>x!==L.id);
+    h+=`<div class="sect"><div class="sect-t">跨層分布</div><div class="xlayers">${
+      n.cross.map(id=>{const lay=S.chain.layers.find(x=>x.id===id);
+        return `<button class="xl${id===L.id?' here':''}" data-lay="${id}" style="--c:var(--${id})">
+          <span class="xid">${id}</span>${lay?lay.name:''}${id===L.id?'<i>主節點</i>':''}</button>`;
+      }).join('')}</div>
+      <div class="mhint">${`營收實質落在 ${n.cross.length} 層。看這種公司不能只看單一層的題材，因為 AI 只占它的一部分，另外 ${others.length} 層的景氣會稀釋掉漲幅。`}</div></div>`;
+  }
+
+  if(!n.ext && n.purity){
+    const R=S.chain.meta.rubric;
+    const hint = n.subst>=4 ? '可替代性高，代表這檔沒有定價權，景氣一轉就先被砍單。'
+               : n.bottleneck>=4 ? '瓶頸度高，代表有定價權，漲價傳導得動。'
+               : '位置中性，看的是量不是價。';
+    h+=`<div class="sect"><div class="sect-t">三維度　主觀評分</div>
+      ${bar('含金量',n.purity,R.purity)}${bar('瓶頸度',n.bottleneck,R.bottleneck)}${bar('可替代性',n.subst,R.subst)}
+      <div class="mhint">${hint}<br>
+      這一檔的判讀：含金量 ${n.purity} 是「${R.purity[n.purity]}」，瓶頸度 ${n.bottleneck} 是「${R.bottleneck[n.bottleneck]}」，
+      可替代性 ${n.subst} 是「${R.subst[n.subst]}」。</div>
+      <span class="warn"><b>注意方向</b>：可替代性數字越大代表越容易被換掉，跟含金量與瓶頸度相反。</span></div>`;
+  }
+  if(q){
+    const stale = q.asOf ? Math.round((Date.now()-new Date(q.asOf+'T00:00:00+08:00'))/864e5) : null;
+    h+=`<div class="sect"><div class="sect-t">行情與財務</div><div class="qgrid">
+      ${cell('收盤 '+(q.currency||'TWD'),q.close)}${cell('漲跌',q.changePct==null?'—':(q.changePct>0?'+':'')+q.changePct+'%')}
+      ${cell('近四季本益比',q.perTtm??'—')}${cell('殖利率',q.yieldPct==null?'—':q.yieldPct+'%')}
+      ${cell('毛利率'+(q.finPeriod?' '+q.finPeriod:''),q.grossPct==null?'—':q.grossPct+'%')}${cell('營益率',q.opPct==null?'—':q.opPct+'%')}
+      ${cell('股價淨值比',q.pbr??'—')}${cell('市值(億)',q.mktcapB==null?'—':q.mktcapB.toLocaleString('en-US'))}
+      ${cell('半年位階',q.pos6m==null?'—':q.pos6m+'%')}${cell('資料日',q.asOf||'—')}
+    </div>
+    ${q.note?`<span class="warn"><b>暫不顯示</b>：${q.note}。</span>`:''}
+    ${stale!=null&&stale>4?`<span class="warn"><b>報價可能已過期</b>：收盤為 ${q.asOf}，距今 ${stale} 天。重跑 scripts/fetch_official.py 更新。</span>`:''}
+    <div class="mhint meta">本益比用近四季獲利計算，<b>虧損公司不計，所以會是空白</b>。
+      半年位階是收盤價在近六個月高低區間的相對位置，100 代表在半年最高點，<b>價格已還原除權息</b>，分割或配息不會被當成下跌。
+      毛利率與營益率是最新一季財報，不是近四季。以上數字全部來自證交所與櫃買中心的官方開放資料。</div></div>`;
+  }
+
+  const es=edgesOf(code).filter(e=>S.etypes.has(e.type));
+  h+=`<div class="sect"><div class="sect-t">關聯鏈路 ${es.length} 條</div>`;
+  if(!es.length) h+=`<div class="empty">目前資料裡沒有為這檔建立關聯。可在 chain.json 的 edges 補上。</div>`;
+  ETORDER.forEach(t=>{
+    const g=es.filter(e=>e.type===t); if(!g.length) return;
+    h+=`<div class="rel-t"><span class="sw" style="background:var(--${t})"></span>${ETL[t]} ${g.length}</div>`;
+    g.forEach(e=>{
+      const other=e.from===code?e.to:e.from, o=byCode.get(other).n;
+      const dir = t==='group' ? '同集團，無方向' : (e.from===code?'本檔 指向 對方':'對方 指向 本檔');
+      const cf = `<span class="conf ${e.conf||'common'}" title="${S.chain.confidence[e.conf||'common']||''}">${CONF[e.conf||'common']}</span>`;
+      h+=`<button class="rel" data-go="${other}">
+        <div class="rn">${o.name}${o.ext?'':`<i>${other}</i>`}${cf}</div>
+        <div class="rd">${e.note||''}</div><div class="rdir">${dir}</div></button>`;
+    });
+  });
+  h+='</div>';
+  // 樣板字串的縮排會變成畫面上的多餘空白。中文之間直接接起來，
+  // 英數之間才補一個空格，否則「，」後面會多一個洞
+  $('#pbody').innerHTML = h.replace(/([\s\S])\n\s+/g,
+    (m,p)=> /[一-鿿　-〿！-｠>]/.test(p) ? p : p+' ');
+  $('#pbody').querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>select(b.dataset.go));
+  $('#pbody').querySelectorAll('[data-lay]').forEach(b=>b.onclick=()=>{
+    const el=document.querySelector('#lay-'+b.dataset.lay);
+    el.classList.add('open'); el.classList.remove('dim');
+    el.scrollIntoView({behavior:'smooth',block:'start'}); setTimeout(redraw,400);
+  });
+}
+const bar=(name,v,r)=>`<div class="metric" title="${r?r.hint+'。'+[1,2,3,4,5].map(i=>i+'='+r[i]).join('　'):''}">
+  <span class="mn">${name}</span>
+  <span class="track"><span class="fill" style="width:${(v||0)*20}%"></span></span>
+  <span class="mv">${v||'—'}</span></div>`;
+const cell=(k,v)=>`<div class="qcell"><div class="qk">${k}</div><div class="qv">${v}</div></div>`;
+
+/* ---------- 篩選與搜尋 ---------- */
+document.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{
+  const f=b.dataset.f;
+  document.querySelectorAll('[data-f]').forEach(x=>x!==b&&x.classList.remove('on'));
+  if(f==='all'){ const anyClosed=[...document.querySelectorAll('.layer')].some(e=>!e.classList.contains('open'));
+    document.querySelectorAll('.layer').forEach(e=>e.classList.toggle('open',anyClosed)); redraw(); return; }
+  b.classList.toggle('on'); S.filter=b.classList.contains('on')?f:null;
+  document.querySelectorAll('.layer').forEach(e=>e.classList.toggle('open',!!S.filter));
+  elByCode.forEach((el,c)=>{ const n=byCode.get(c).n;
+    const fail = S.filter==='cross' ? !(n.cross && n.cross.length>1)
+                                    : (!n.ext && (n[S.filter]||0)<4);
+    el.classList.toggle('mute', !!S.filter && fail);
+  });
+  redraw(); updateCount();
+});
+$('#search').oninput=e=>{
+  const v=e.target.value.trim();
+  if(!v){ elByCode.forEach(el=>el.classList.remove('mute')); redraw(); updateCount(); return; }
+  document.querySelectorAll('.layer').forEach(el=>el.classList.add('open'));
+  elByCode.forEach((el,c)=>{ const n=byCode.get(c).n;
+    el.classList.toggle('mute', !(c.includes(v)||n.name.includes(v)||(n.role||'').includes(v)));
+  });
+  redraw(); updateCount(v);
+};
+
+/* 篩選後一定要說「剩幾檔」。沒有這個數字，使用者不知道自己在看全貌還是切片 */
+function updateCount(query){
+  const all=[...byCode.entries()].filter(([c])=>byCode.get(c).n.kind==='company');
+  const shown=all.filter(([c])=>!elByCode.get(c).classList.contains('mute'));
+  const active = !!S.filter || !!S.sel || !!S.theme || !!(query&&query.length);
+  const label = document.querySelector('[data-f].on')?.textContent
+             || (S.theme && S.chain.themes.find(t=>t.id===S.theme)?.name)
+             || (S.sel && `${byCode.get(S.sel).n.name} 的關聯`)
+             || (query ? `搜尋「${query}」` : '');
+  $('#fcount').innerHTML = active
+    ? `${label}：符合 <b>${shown.length}</b> 檔台股，共 ${all.length} 檔`
+    : `顯示全部 <b>${all.length}</b> 檔台股`;
+  $('#fclear').hidden = !active;
+  if(shown.length===0 && active)
+    $('#fcount').innerHTML = `${label}：<b>沒有符合的標的</b>。試試清除篩選或換個關鍵字`;
+}
+$('#fclear').onclick=()=>{
+  $('#search').value='';
+  document.querySelectorAll('[data-f]').forEach(x=>x.classList.remove('on'));
+  S.filter=null; clear(); $('#search').focus();
+};
+$('#pclose').onclick=clear;
+addEventListener('keydown',e=>{ if(e.key==='Escape') clear(); });
+</script>
+</body>
+</html>

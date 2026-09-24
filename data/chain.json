@@ -1,0 +1,713 @@
+{
+  "meta": {
+    "title": "台股 AI 供應鏈地層剖面",
+    "axis": "錢流方向：由資本支出源頭往下流到各層供應商",
+    "scoring": "含金量、瓶頸度、可替代性皆為 1 到 5 的主觀評分，依 meta.rubric 的定義判斷，不是公司揭露數字。用途是比較同一層裡誰比較純、誰比較有定價權。",
+    "disclaimer": "產業關係為公開資訊整理，僅供研究，非投資建議",
+    "updated": "2026-09-24",
+    "rubric": {
+      "purity": {"label": "含金量", "hint": "AI 相關營收占比，越高越純", "1": "幾乎沒有，只是題材沾邊", "2": "一成上下", "3": "兩到四成", "4": "約一半", "5": "多數營收來自 AI"},
+      "bottleneck": {"label": "瓶頸度", "hint": "有沒有定價權，漲價傳導得動嗎", "1": "完全紅海，客戶說了算", "2": "議價力弱", "3": "普通", "4": "供給偏緊，能漲價", "5": "卡脖子環節，客戶要排隊"},
+      "subst": {"label": "可替代性", "hint": "數字越大越容易被換掉", "1": "極難替代，換掉要重新驗證很久", "2": "不易替代", "3": "普通", "4": "容易找到替代", "5": "高度商品化，隨時可換"}
+    },
+    "chains": {"demand": {"label": "需求與變現", "desc": "錢從這裡出來，也從這裡回收。資本支出的源頭與最終的變現端"}, "hardware": {"label": "硬體製造", "desc": "把錢變成晶片與伺服器的實體製造鏈，層與層之間確實是上下游"}, "infra": {"label": "基礎設施", "desc": "讓算力能開機的電、熱、網路與場域。與硬體鏈平行發生，不是它的下游"}},
+    "axisNote": "十層分屬三條鏈。同一條鏈之內，上下位置代表真實的上下游關係；跨鏈之間只是排版順序，不代表誰在誰的下游。例如重電不是記憶體的下游，它們是平行發生的兩件事。",
+    "checkPolicy": "關聯線的 checked 欄位記錄最後一次實際查證的日期。超過 90 天或從未查證的線，每天由排程輪替抽出重新查證。結構與報價可以用程式檢查，但「某家公司還是不是某個環節的供應商」只能靠重新查資料。"
+  },
+  "edgeTypes": {
+    "supply": {"label": "供應", "desc": "實體出貨或提供服務給對方"},
+    "alliance": {"label": "綁定", "desc": "共同設計、獨家或深度合作，替換成本高"},
+    "substitute": {"label": "替代", "desc": "彼此競爭的平行技術路線"},
+    "crowding": {"label": "排擠", "desc": "非直接供應。前者吃掉產能導致後者供給緊縮而漲價"},
+    "equity": {"label": "持股", "desc": "資本關係。出錢入股或投資，不必然有出貨關係"},
+    "group": {"label": "同集團", "desc": "同一個母集團，或從同一家公司分割出來"}
+  },
+  "confidence": {"disclosed": "公司或官方揭露", "reported": "媒體與法人報導，未經公司證實", "inferred": "產業推測。從技術規格、產能配置或客戶結構反推，公司未證實也未否認", "common": "產業共識。多方報導一致且長期成立，但沒有單一權威出處"},
+  "themes": [
+    {
+      "id": "mem",
+      "name": "記憶體缺貨",
+      "note": "2026 為十五年來最嚴重的記憶體缺貨。AI 伺服器排擠一般產能，DRAM、NAND、HBM 同步漲價。戴爾管理層在法說指出目前最缺的是 DRAM，其次 NAND，部分 CPU 與硬碟也缺。研調預期 DRAM 缺口延續到 2027，NAND 則可能先轉寬鬆，兩者會分化。",
+      "codes": ["2408", "2344", "2337", "8299", "5351", "3260", "5289", "4967", "2451", "8088", "6239", "2449", "6257"]
+    },
+    {"id": "glass", "name": "玻纖布與銅箔", "note": "AI 伺服器板層數拉到 34 到 50 層，必須用極低損耗材料，高階玻纖布與 HVLP4 銅箔出現結構性缺貨。台玻預估 Low Dk、Low CTE 供不應求會延續到 2027 年底。這是整條鏈最上游、最少人注意的瓶頸。", "codes": ["1815", "1802", "5475", "8358", "2383", "6274", "6213"]},
+    {
+      "id": "cpo",
+      "name": "CPO 與矽光子",
+      "note": "2026 是共同封裝光學商轉元年，台積電 COUPE 平台進入量產。真正的瓶頸在檢測：測試道次從傳統 IC 的 1 到 2 道拉長到 4 道以上，光電混合測試成為量產關鍵。",
+      "codes": ["2330", "3711", "3081", "3363", "6442", "3163", "3450", "4979", "6223", "6510", "2345", "6451", "2360", "COUPE", "CPO", "6526", "LPO"]
+    },
+    {"id": "mature", "name": "成熟製程回春", "note": "矽光子的光子晶片 PIC 用的是成熟製程節點，電子晶片 EIC 才用先進製程。CPO 放量會把成熟製程從殺價競爭拉回結構性需求，這是成熟製程廠被重新評價的理由。", "codes": ["2303", "5347", "6770", "6789", "3374", "CPO"]},
+    {"id": "wet", "name": "濕製程與 CoPoS", "note": "台積電從 CoWoS 走向 CoPoS 方形基板，方形載板的清洗、蝕刻與去膠難度大幅上升，半導體濕製程設備成為關鍵。設備廠是賣鏟子給賣鏟子的人，含金量常被低估。", "codes": ["3583", "3131", "6187", "5443", "2467", "3680", "1560", "3587"]},
+    {"id": "cool", "name": "散熱與功耗牆", "note": "單櫃功耗跳到 130kW 以上，氣冷在物理上做不到，液冷從選配變必配。這層的成長不是來自出貨量，是單機價值量翻倍。", "codes": ["3017", "3324", "8996", "6125", "3653", "2421", "3483", "3338", "2308", "2301", "6282", "6805", "6449", "3357"]},
+    {"id": "pkg", "name": "CoWoS 後段與測試", "note": "先進封裝的錢不是只流向台積電。晶片挑揀、系統級測試、探針卡與測試座都因為 AI 晶片腳數暴增與測試工時拉長而受惠，而且這些環節的競爭者遠比晶圓代工少。", "codes": ["6640", "2360", "6515", "6510", "6223", "2449", "6257", "3587", "3583", "3131", "COWOS", "COUPE", "6683"]},
+    {"id": "wafer", "name": "矽晶圓復甦", "note": "環球晶 2026 第二季法說指上半年復甦緩慢且不均，但 AI 需求已擴散到先進封裝、記憶體與成熟製程，12 吋、8 吋、6 吋與 GaN 矽基板產線接近滿載，下半年啟動漲價。SEMI 預估 2026 全球矽晶圓出貨面積年增 13.1%。這是景氣循環股，市場交易的是復甦幅度，財報要跟得上股價。", "codes": ["5483", "6488", "6182", "3532"]},
+    {
+      "id": "power3",
+      "name": "第三代半導體與 AI 電力",
+      "note": "兩件事同時發生。一是輝達 800V 高壓直流架構，台達電 2027 第一季小量投產、第二季放量；六月曾傳延後至 2028，法人定調為階段調整而非趨勢反轉。二是台積電 2027 年 7 月底前退出 GaN 代工，納微 100V 產品 2026 上半年起在力積電量產，世界先進取得台積電授權、2028 上半年量產。碳化矽端由漢磊代工、嘉晶供磊晶。",
+      "codes": ["5347", "6770", "3707", "3016", "6488", "6182", "2308", "2301"]
+    }
+  ],
+  "layers": [
+    {
+      "id": "L0",
+      "name": "資本源",
+      "sub": "錢從這裡出發",
+      "note": "整條鏈的資金源頭。台股在此層沒有標的，但每一次資本支出上修，訊號都會沿著下面九層傳導。",
+      "groups": [
+        {
+          "name": "雲端四巨頭",
+          "nodes": [
+            {"code": "MSFT", "name": "微軟", "ext": true, "role": "OpenAI 最大股東與算力提供者", "kind": "anchor"},
+            {"code": "GOOGL", "name": "Google", "ext": true, "role": "自研 TPU，唯一不完全依賴輝達的巨頭", "kind": "anchor"},
+            {"code": "AMZN", "name": "Amazon", "ext": true, "role": "自研 Trainium，AWS 算力出租", "kind": "anchor"},
+            {"code": "META", "name": "Meta", "ext": true, "role": "自研 MTIA，資本支出成長最猛", "kind": "anchor"}
+          ]
+        },
+        {
+          "name": "模型公司與主權 AI",
+          "nodes": [
+            {"code": "OPENAI", "name": "OpenAI", "ext": true, "role": "自建資料中心，已從租算力轉為蓋算力", "kind": "anchor"},
+            {"code": "XAI", "name": "xAI", "ext": true, "role": "Colossus 叢集，建置速度最激進", "kind": "anchor"},
+            {"code": "SOVEREIGN", "name": "主權 AI", "ext": true, "role": "各國政府自建國家級算力，台廠的第二成長曲線", "kind": "segment"}
+          ]
+        },
+        {
+          "name": "新型雲 Neocloud",
+          "nodes": [
+            {"code": "CRWV", "name": "CoreWeave", "ext": true, "role": "純 GPU 算力出租，輝達自己也入股", "kind": "anchor"},
+            {"code": "NBIS", "name": "Nebius", "ext": true, "role": "歐洲 AI 雲，輝達入股並綁定機房建置", "kind": "anchor"}
+          ]
+        }
+      ],
+      "chain": "demand"
+    },
+    {
+      "id": "L1",
+      "name": "模型與系統軟體",
+      "sub": "台股的結構性缺口",
+      "note": "這層價值最高，台股沒有模型或框架的標的。CUDA 生態是輝達真正的護城河，不是晶片本身。台股能吃到的是代理與落地服務，賺的是服務財不是軟體授權財，毛利結構完全不同，看的時候要分清楚。",
+      "groups": [
+        {
+          "name": "模型與框架",
+          "nodes": [
+            {"code": "NVDA-CUDA", "name": "CUDA 生態", "ext": true, "role": "輝達真正的護城河，換供應商等於重寫軟體", "kind": "standard"},
+            {"code": "GEMINI", "name": "Gemini / GPT / Claude", "ext": true, "role": "模型層，直接向下採購算力", "kind": "segment"}
+          ]
+        },
+        {
+          "name": "主權與電信骨幹",
+          "nodes": [
+            {"code": "2412", "name": "中華電", "role": "國網與主權 AI 算力承接者", "purity": 1, "bottleneck": 2, "subst": 3, "cross": ["L1", "L8"], "kind": "company"}
+          ]
+        },
+        {
+          "name": "企業雲端落地 MSP",
+          "refs": ["2357"],
+          "refNote": "華碩的主節點在 L9，因為營收主體仍是硬體。但它透過台智雲做生成式 AI 雲與模型服務，是這層少數真正有落地的台股，點參照卡可以跳過去。",
+          "nodes": [
+            {"code": "6811", "name": "宏碁資訊", "role": "微軟體系與公部門 AI 落地主力", "purity": 2, "bottleneck": 2, "subst": 4, "kind": "company"},
+            {"code": "6689", "name": "伊雲谷", "role": "AWS 核心託管商，企業上雲的代理層", "purity": 2, "bottleneck": 2, "subst": 4, "kind": "company"}
+          ]
+        }
+      ],
+      "chain": "demand"
+    },
+    {
+      "id": "L2",
+      "name": "運算晶片設計",
+      "sub": "誰定義了規格",
+      "note": "這層決定整條鏈的規格。輝達與 ASIC 陣營的路線之爭，會直接改變下游誰接到單。",
+      "groups": [
+        {
+          "name": "加速器巨頭",
+          "nodes": [
+            {"code": "NVDA", "name": "輝達", "ext": true, "role": "GPU 龍頭，橫跨晶片、機櫃、網路與軟體", "kind": "anchor"},
+            {"code": "AMD", "name": "超微", "ext": true, "role": "MI 系列，主要的第二來源選項", "kind": "anchor"},
+            {"code": "AVGO", "name": "博通", "ext": true, "role": "ASIC 與交換器晶片，Google TPU 的共同設計者", "kind": "anchor"},
+            {"code": "INTC", "name": "英特爾", "ext": true, "role": "競爭對手，同時是輝達的持股對象，關係從純對立變成又競又合", "kind": "anchor"}
+          ]
+        },
+        {
+          "name": "ASIC 設計服務",
+          "nodes": [
+            {"code": "3661", "name": "世芯-KY", "role": "AI ASIC 設計服務，Amazon Trainium 主力夥伴，客戶集中度高", "purity": 5, "bottleneck": 4, "subst": 3, "kind": "company"},
+            {"code": "3443", "name": "創意", "role": "台積電轉投資的 ASIC 設計服務，2026 第二季雲端營收占八成", "purity": 4, "bottleneck": 4, "subst": 3, "kind": "company"},
+            {"code": "3035", "name": "智原", "role": "ASIC 設計服務，AI 占比較低", "purity": 2, "bottleneck": 2, "subst": 4, "kind": "company"}
+          ]
+        },
+        {
+          "name": "SoC 與邊緣 AI",
+          "nodes": [
+            {"code": "2454", "name": "聯發科", "role": "與輝達共同開發，同時吃 ASIC 與 AI 手機兩條線", "purity": 3, "bottleneck": 4, "subst": 3, "cross": ["L2", "L9"], "kind": "company"},
+            {"code": "2379", "name": "瑞昱", "role": "網通與邊緣晶片", "purity": 2, "bottleneck": 2, "subst": 4, "cross": ["L2", "L8", "L9"], "kind": "company"}
+          ]
+        },
+        {
+          "name": "矽智財 IP",
+          "nodes": [
+            {"code": "3529", "name": "力旺", "role": "OTP 記憶體 IP，先進製程滲透率高", "purity": 3, "bottleneck": 4, "subst": 2, "kind": "company"},
+            {"code": "6643", "name": "M31", "role": "介面 IP", "purity": 3, "bottleneck": 3, "subst": 3, "kind": "company"},
+            {"code": "6533", "name": "晶心科", "kind": "company", "role": "RISC-V CPU IP，切入 AI、HPC 與車用", "purity": 3, "bottleneck": 3, "subst": 3},
+            {"code": "6531", "name": "愛普*", "role": "記憶體內運算 IP", "purity": 4, "bottleneck": 3, "subst": 3, "kind": "company"},
+            {"code": "SNPS", "name": "新思科技", "ext": true, "role": "EDA 與 IP，輝達持股對象", "kind": "anchor"}
+          ]
+        },
+        {
+          "name": "高速互連 IC",
+          "nodes": [
+            {"code": "6526", "name": "達發", "kind": "company", "role": "單通道 100G SerDes 鎖定 400G 與 800G 光收發模組，聯發科持股約七成", "purity": 4, "bottleneck": 4, "subst": 3},
+            {"code": "8040", "name": "九暘", "kind": "company", "role": "乙太網路 PHY、Switch SoC 與 PoE，達發子公司", "purity": 2, "bottleneck": 3, "subst": 3}
+          ]
+        },
+        {
+          "name": "高速傳輸與管理晶片",
+          "nodes": [
+            {"code": "4966", "name": "譜瑞-KY", "role": "高速訊號中繼，PCIe 與 CXL 受惠", "purity": 3, "bottleneck": 3, "subst": 3, "kind": "company"},
+            {"code": "5269", "name": "祥碩", "role": "高速傳輸控制晶片", "purity": 2, "bottleneck": 3, "subst": 3, "kind": "company"},
+            {"code": "5274", "name": "信驊", "role": "伺服器 BMC 遠端管理晶片，市占極高", "purity": 5, "bottleneck": 5, "subst": 1, "kind": "company"}
+          ]
+        }
+      ],
+      "chain": "hardware"
+    },
+    {
+      "id": "L3",
+      "name": "晶圓製造與先進封裝",
+      "sub": "真正的物理瓶頸",
+      "note": "先進封裝 CoWoS 是整條鏈最硬的瓶頸。設備與材料廠是「賣鏟子給賣鏟子的人」，含金量常被低估。",
+      "groups": [
+        {
+          "name": "晶圓代工",
+          "nodes": [
+            {"code": "2330", "name": "台積電", "role": "先進製程與 CoWoS 市占極高，先進 AI 晶片幾乎必經", "purity": 3, "bottleneck": 5, "subst": 1, "kind": "company"},
+            {"code": "2303", "name": "聯電", "role": "成熟製程，AI 間接受惠", "purity": 1, "bottleneck": 2, "subst": 4, "kind": "company"},
+            {"code": "6770", "name": "力積電", "role": "記憶體與成熟製程代工。承接納微 GaN 功率元件，100V 產品 2026 上半年於竹南 8B 廠量產，650V 由台積電逐步轉入", "purity": 1, "bottleneck": 2, "subst": 4, "cross": ["L3", "L4"], "kind": "company"},
+            {"code": "5347", "name": "世界先進", "role": "成熟製程代工。取得台積電 GaN 授權，2028 上半年量產後成為全球唯一同時提供矽基與 QST 基板 GaN 製程的代工廠；矽光子 PIC 也用成熟節點", "purity": 1, "bottleneck": 3, "subst": 3, "kind": "company"}
+          ]
+        },
+        {
+          "name": "封裝與測試",
+          "nodes": [
+            {"code": "COWOS", "name": "CoWoS 先進封裝", "ext": true, "kind": "standard", "role": "把運算晶片與 HBM 一起架在中介層上的整合技術，不是單一製程步驟。它同時是產能瓶頸與規格定義者"},
+            {"code": "COUPE", "name": "COUPE 光引擎", "ext": true, "kind": "standard", "role": "台積電的矽光子平台 Compact Universal Photonic Engine。用 SoIC-X 把電子晶片疊在光子晶片上，做成一顆光引擎模組，2026 年整合進 CoWoS 封裝。它跑在 CoWoS 平台上，不是另一條封裝路線"},
+            {"code": "CPO", "name": "CPO 光學共同封裝", "ext": true, "kind": "standard", "role": "把光收發從機殼前面板搬到晶片旁邊，訊號不再走一段銅線才轉光。相較板上插拔式方案，功耗效率約兩倍、延遲改善約一個數量級。瓶頸在光電混合檢測，測試道次從一兩道拉長到四道以上"},
+            {"code": "3711", "name": "日月光投控", "role": "封測市占領先，同時發展 FOPLP 分流路線", "purity": 3, "bottleneck": 4, "subst": 2, "cross": ["L3", "L6"], "kind": "company"},
+            {"code": "2449", "name": "京元電", "role": "專業測試，HBM 與 AI 晶片測試時間拉長受惠", "purity": 4, "bottleneck": 4, "subst": 2, "kind": "company"},
+            {"code": "6257", "name": "矽格", "role": "測試，記憶體與高速訊號", "purity": 3, "bottleneck": 3, "subst": 3, "kind": "company"},
+            {"code": "6239", "name": "力成", "role": "記憶體封測為主", "purity": 3, "bottleneck": 3, "subst": 3, "kind": "company"},
+            {"code": "8150", "name": "南茂", "role": "記憶體與驅動 IC 封測", "purity": 2, "bottleneck": 2, "subst": 4, "kind": "company"},
+            {"code": "3374", "name": "精材", "role": "晶圓級封裝，台積電體系", "purity": 2, "bottleneck": 3, "subst": 3, "kind": "company"},
+            {"code": "6789", "name": "采鈺", "role": "光學感測封裝，被點名為 CoPoS 與矽光子受惠者", "purity": 3, "bottleneck": 3, "subst": 3, "cross": ["L3", "L9"], "kind": "company"}
+          ]
+        },
+        {
+          "name": "測試介面",
+          "nodes": [
+            {"code": "6515", "name": "穎崴", "role": "高階測試座，AI 晶片腳數暴增受惠", "purity": 5, "bottleneck": 4, "subst": 2, "kind": "company"},
+            {"code": "6510", "name": "精測", "role": "探針卡", "purity": 4, "bottleneck": 4, "subst": 2, "kind": "company"},
+            {"code": "6223", "name": "旺矽", "role": "探針卡與矽光子檢測", "purity": 4, "bottleneck": 4, "subst": 2, "kind": "company"},
+            {"code": "6683", "name": "雍智科技", "kind": "company", "role": "半導體測試載板，連接測試機與晶片的關鍵介面，AI ASIC 測試需求帶動", "purity": 4, "bottleneck": 3, "subst": 3},
+            {"code": "2360", "name": "致茂", "role": "系統級測試 SLT 與電力測試，AI 晶片測試工時拉長受惠", "purity": 4, "bottleneck": 4, "subst": 2, "kind": "company"}
+          ]
+        },
+        {
+          "name": "設備與材料",
+          "nodes": [
+            {"code": "3583", "name": "辛耘", "role": "濕製程設備與再生晶圓，先進封裝關鍵", "purity": 4, "bottleneck": 4, "subst": 2, "kind": "company"},
+            {"code": "6640", "name": "均華", "role": "CoWoS 晶片挑揀機 Die Sorter，市占極高的純度指標", "purity": 5, "bottleneck": 4, "subst": 2, "kind": "company"},
+            {"code": "3131", "name": "弘塑", "role": "封裝濕製程設備", "purity": 4, "bottleneck": 4, "subst": 2, "kind": "company"},
+            {"code": "6187", "name": "萬潤", "role": "點膠與封裝設備", "purity": 3, "bottleneck": 3, "subst": 3, "kind": "company"},
+            {"code": "2467", "name": "志聖", "role": "烘烤與曝光設備", "purity": 3, "bottleneck": 3, "subst": 3, "kind": "company"},
+            {"code": "3680", "name": "家登", "role": "EUV 光罩盒，全球主要供應者之一", "purity": 3, "bottleneck": 5, "subst": 1, "kind": "company"},
+            {"code": "1560", "name": "中砂", "role": "鑽石碟與再生晶圓", "purity": 2, "bottleneck": 3, "subst": 3, "kind": "company"},
+            {"code": "5434", "name": "崇越", "role": "半導體材料通路", "purity": 2, "bottleneck": 2, "subst": 4, "cross": ["L3", "L8"], "kind": "company"},
+            {"code": "3587", "name": "閎康", "role": "材料檢測分析，先進封裝驗證需求", "purity": 3, "bottleneck": 3, "subst": 3, "kind": "company"},
+            {"code": "5443", "name": "均豪", "role": "自動化與面板級封裝設備", "purity": 3, "bottleneck": 3, "subst": 3, "cross": ["L3", "L5"], "kind": "company"}
+          ]
+        },
+        {
+          "name": "矽晶圓",
+          "nodes": [
+            {"code": "6488", "name": "環球晶", "role": "矽晶圓全球前三。12 吋、8 吋、6 吋與 GaN 矽基板產線接近滿載，2026 下半年啟動漲價", "purity": 2, "bottleneck": 4, "subst": 2, "kind": "company"},
+            {"code": "3532", "name": "台勝科", "role": "矽晶圓", "purity": 2, "bottleneck": 3, "subst": 3, "kind": "company"},
+            {"code": "5483", "name": "中美晶", "kind": "company", "role": "環球晶母公司，集團橫跨矽晶圓、太陽能與化合物半導體", "purity": 2, "bottleneck": 3, "subst": 3},
+            {"code": "6182", "name": "合晶", "kind": "company", "role": "全球第六大矽晶圓廠，布局 12 吋、SOI 與 GaN 磊晶", "purity": 2, "bottleneck": 3, "subst": 3}
+          ]
+        },
+        {
+          "name": "第三代半導體 GaN／SiC",
+          "refs": ["5347", "6770"],
+          "refNote": "世界先進與力積電的主節點在晶圓代工。前者取得台積電 GaN 授權、2028 上半年量產；後者承接納微 GaN 轉單、2026 上半年量產。兩者時間點差兩年，不是同一件事。",
+          "nodes": [
+            {"code": "NAVITAS", "name": "納微", "ext": true, "kind": "anchor", "role": "GaN 功率元件設計商，台積電退出 GaN 代工後把產品移往力積電"},
+            {"code": "3707", "name": "漢磊", "kind": "company", "role": "台灣少數具碳化矽功率元件代工能力者，4 吋與 6 吋 SiC 平台，從車用工控延伸到 AI 伺服器電源", "purity": 2, "bottleneck": 3, "subst": 3},
+            {"code": "3016", "name": "嘉晶", "kind": "company", "role": "碳化矽與氮化鎵磊晶，800V 架構拉高功率元件用量，上游磊晶同步受惠", "purity": 2, "bottleneck": 3, "subst": 3}
+          ]
+        }
+      ],
+      "chain": "hardware"
+    },
+    {
+      "id": "L4",
+      "name": "記憶體",
+      "sub": "三種受惠型態最集中的一層",
+      "note": "台廠不做 HBM 顆粒，卻是排擠效應最大的受惠者。HBM 吃掉晶圓與封裝產能，一般 DRAM 供給緊縮而漲價，這是間接受惠不是直接供應，兩者的漲跌節奏完全不同。",
+      "groups": [
+        {
+          "name": "HBM 三強",
+          "nodes": [
+            {"code": "HYNIX", "name": "SK 海力士", "ext": true, "role": "HBM 主要供應者，輝達認證進度領先", "kind": "anchor"},
+            {"code": "MU", "name": "美光", "ext": true, "role": "HBM 第二來源，產能全押 HBM", "kind": "anchor"},
+            {"code": "SAMSUNG", "name": "三星", "ext": true, "role": "HBM 認證進度落後，變數最大", "kind": "anchor"}
+          ]
+        },
+        {
+          "name": "DRAM 顆粒（排擠受惠）",
+          "nodes": [
+            {"code": "2408", "name": "南亞科", "role": "利基 DRAM。HBM 排擠一般 DRAM 產能，受惠機制較直接", "purity": 2, "bottleneck": 3, "subst": 3, "kind": "company"},
+            {"code": "2344", "name": "華邦電", "role": "利基型 DRAM 與 NOR Flash", "purity": 2, "bottleneck": 3, "subst": 3, "kind": "company"},
+            {"code": "2337", "name": "旺宏", "role": "NOR Flash 與 ROM", "purity": 1, "bottleneck": 2, "subst": 4, "kind": "company"}
+          ]
+        },
+        {
+          "name": "控制 IC（中間路段）",
+          "nodes": [
+            {"code": "8299", "name": "群聯", "role": "NAND 控制 IC 與 aiDAPTIV 方案，不做顆粒，靠韌體與方案賺錢", "purity": 3, "bottleneck": 4, "subst": 2, "cross": ["L2", "L4"], "kind": "company"},
+            {"code": "5351", "name": "鈺創", "role": "利基記憶體設計與 CXL 相關", "purity": 3, "bottleneck": 3, "subst": 3, "kind": "company"},
+            {"code": "6485", "name": "點序", "role": "記憶體控制 IC", "purity": 2, "bottleneck": 2, "subst": 4, "kind": "company"}
+          ]
+        },
+        {
+          "name": "模組與應用",
+          "nodes": [
+            {"code": "3260", "name": "威剛", "role": "記憶體模組，價格彈性最大", "purity": 2, "bottleneck": 1, "subst": 5, "kind": "company"},
+            {"code": "5289", "name": "宜鼎", "role": "工控與邊緣 AI 儲存，毛利高於一般模組", "purity": 3, "bottleneck": 3, "subst": 3, "cross": ["L4", "L9"], "kind": "company"},
+            {"code": "4967", "name": "十銓", "role": "記憶體模組", "purity": 2, "bottleneck": 1, "subst": 5, "kind": "company"},
+            {"code": "2451", "name": "創見", "role": "工控記憶體模組", "purity": 2, "bottleneck": 2, "subst": 4, "kind": "company"},
+            {"code": "8088", "name": "品安", "role": "記憶體模組與儲存", "purity": 2, "bottleneck": 1, "subst": 5, "kind": "company"}
+          ]
+        },
+        {
+          "name": "下一代替代路線",
+          "nodes": [
+            {"code": "CXL", "name": "CXL 記憶體池化", "ext": true, "role": "把記憶體變成可共享資源池，繞過單機容量牆", "kind": "standard"},
+            {"code": "HBF", "name": "HBF 高頻寬快閃", "ext": true, "role": "用 NAND 堆疊搶 HBM 的容量任務", "kind": "standard"},
+            {"code": "SOCAMM", "name": "SOCAMM", "ext": true, "role": "伺服器用低功耗模組新規格", "kind": "standard"}
+          ]
+        }
+      ],
+      "chain": "hardware"
+    },
+    {
+      "id": "L5",
+      "name": "載板與電路板",
+      "sub": "GPU 站在什麼上面",
+      "note": "GPU 晶片先接到 ABF 載板，載板再焊到 PCB 主機板。這兩層是台廠最扎實的位置，也是你問的「GPU 接在什麼上面」的答案。",
+      "groups": [
+        {
+          "name": "ABF 載板",
+          "nodes": [
+            {"code": "3037", "name": "欣興", "role": "ABF 載板，AI 晶片直接的承載體", "purity": 3, "bottleneck": 4, "subst": 2, "kind": "company"},
+            {"code": "8046", "name": "南電", "role": "ABF 載板，AI 占比高", "purity": 4, "bottleneck": 4, "subst": 2, "kind": "company"},
+            {"code": "3189", "name": "景碩", "role": "ABF 與覆晶載板，受惠一般載板產能排擠", "purity": 3, "bottleneck": 3, "subst": 3, "kind": "company"}
+          ]
+        },
+        {
+          "name": "銅箔基板 CCL",
+          "nodes": [
+            {"code": "2383", "name": "台光電", "role": "高階 CCL 市占領先，輝達平台主要料號", "purity": 5, "bottleneck": 5, "subst": 1, "kind": "company"},
+            {"code": "6274", "name": "台燿", "role": "高速 CCL 第二來源", "purity": 4, "bottleneck": 4, "subst": 2, "kind": "company"},
+            {"code": "6213", "name": "聯茂", "role": "CCL", "purity": 3, "bottleneck": 3, "subst": 3, "kind": "company"}
+          ]
+        },
+        {
+          "name": "上游材料",
+          "nodes": [
+            {"code": "1815", "name": "富喬", "role": "低介電玻纖布，AI 板材的隱形瓶頸", "purity": 4, "bottleneck": 5, "subst": 2, "kind": "company"},
+            {"code": "1802", "name": "台玻", "role": "玻纖布，高階產能吃緊看到 2027 年底", "purity": 2, "bottleneck": 5, "subst": 2, "kind": "company"},
+            {"code": "5475", "name": "德宏", "role": "玻纖與樹脂材料", "purity": 3, "bottleneck": 3, "subst": 3, "kind": "company"},
+            {"code": "8358", "name": "金居", "role": "高階銅箔", "purity": 3, "bottleneck": 4, "subst": 2, "kind": "company"}
+          ]
+        },
+        {
+          "name": "伺服器 PCB",
+          "nodes": [
+            {"code": "2368", "name": "金像電", "role": "AI 伺服器 PCB 最純標的", "purity": 5, "bottleneck": 4, "subst": 2, "kind": "company"},
+            {"code": "8155", "name": "博智", "role": "高層數伺服器與交換器板，純度高於一般 PCB 廠", "purity": 5, "bottleneck": 4, "subst": 2, "kind": "company"},
+            {"code": "3044", "name": "健鼎", "role": "PCB，產品線分散", "purity": 2, "bottleneck": 2, "subst": 4, "kind": "company"}
+          ]
+        },
+        {
+          "name": "設備與檢測",
+          "nodes": [
+            {"code": "3563", "name": "牧德", "role": "PCB 光學檢測設備", "purity": 3, "bottleneck": 3, "subst": 3, "kind": "company"},
+            {"code": "3167", "name": "大量", "role": "PCB 鑽孔設備", "purity": 3, "bottleneck": 3, "subst": 3, "kind": "company"},
+            {"code": "6438", "name": "迅得", "role": "PCB 自動化設備", "purity": 3, "bottleneck": 3, "subst": 3, "kind": "company"}
+          ]
+        }
+      ],
+      "chain": "hardware"
+    },
+    {
+      "id": "L6",
+      "name": "系統組裝與關鍵件",
+      "sub": "台股權值最集中的一層",
+      "note": "營收數字最大，但毛利率最低。看這層要看的是機櫃出貨量與規格升級，不是單純的營收年增。",
+      "groups": [
+        {
+          "name": "AI 伺服器 ODM",
+          "nodes": [
+            {"code": "RACK", "name": "機櫃級系統", "ext": true, "kind": "standard", "role": "交付單位已從單台伺服器變成整座液冷機櫃，數十顆 GPU 與 CPU 一起出貨。機櫃、網路、電力、散熱因此都是一級節點，不是伺服器的配件"},
+            {"code": "2317", "name": "鴻海", "role": "橫跨機櫃組裝、零組件與電動車，AI 占比正在快速拉升", "purity": 3, "bottleneck": 3, "subst": 3, "cross": ["L6", "L7", "L9"], "kind": "company"},
+            {"code": "2382", "name": "廣達", "role": "AI 伺服器 ODM，雲端客戶最分散", "purity": 4, "bottleneck": 3, "subst": 3, "cross": ["L6", "L9"], "kind": "company"},
+            {"code": "3231", "name": "緯創", "role": "GPU 主板與模組，超微與輝達雙線", "purity": 4, "bottleneck": 3, "subst": 3, "cross": ["L6", "L9"], "kind": "company"},
+            {"code": "6669", "name": "緯穎", "role": "白牌伺服器，純度最高的 CSP 直供", "purity": 5, "bottleneck": 3, "subst": 3, "kind": "company"},
+            {"code": "2356", "name": "英業達", "role": "AI 伺服器 ODM", "purity": 3, "bottleneck": 2, "subst": 4, "cross": ["L6", "L9"], "kind": "company"},
+            {"code": "3706", "name": "神達", "role": "伺服器與雲端", "purity": 3, "bottleneck": 2, "subst": 4, "cross": ["L6", "L9"], "kind": "company"}
+          ]
+        },
+        {
+          "name": "板卡",
+          "nodes": [
+            {"code": "2376", "name": "技嘉", "role": "AI 伺服器與板卡自有品牌", "purity": 4, "bottleneck": 2, "subst": 4, "cross": ["L6", "L9"], "kind": "company"},
+            {"code": "2377", "name": "微星", "role": "板卡與伺服器", "purity": 3, "bottleneck": 2, "subst": 4, "cross": ["L6", "L9"], "kind": "company"},
+            {"code": "3515", "name": "華擎", "role": "板卡與伺服器", "purity": 3, "bottleneck": 2, "subst": 4, "cross": ["L6", "L9"], "kind": "company"}
+          ]
+        },
+        {
+          "name": "機構與機殼",
+          "nodes": [
+            {"code": "8210", "name": "勤誠", "role": "伺服器機殼市占領先", "purity": 5, "bottleneck": 3, "subst": 3, "kind": "company"},
+            {"code": "3693", "name": "營邦", "role": "伺服器機殼", "purity": 4, "bottleneck": 2, "subst": 4, "kind": "company"},
+            {"code": "3013", "name": "晟銘電", "role": "機櫃與水冷機箱代工，廣達體系主力", "purity": 4, "bottleneck": 3, "subst": 3, "kind": "company"},
+            {"code": "2059", "name": "川湖", "role": "伺服器滑軌，毛利率高且市占集中", "purity": 4, "bottleneck": 5, "subst": 1, "kind": "company"},
+            {"code": "6584", "name": "南俊國際", "role": "伺服器滑軌，打入美系 CSP 的第二來源", "purity": 4, "bottleneck": 3, "subst": 3, "kind": "company"}
+          ]
+        },
+        {
+          "name": "連接器與線材",
+          "nodes": [
+            {"code": "3533", "name": "嘉澤", "role": "CPU 與 GPU 插槽連接器", "purity": 4, "bottleneck": 4, "subst": 2, "kind": "company"},
+            {"code": "3665", "name": "貿聯-KY", "role": "高速線材與線束", "purity": 4, "bottleneck": 4, "subst": 2, "cross": ["L6", "L9"], "kind": "company"},
+            {"code": "3023", "name": "信邦", "role": "線束與整合，綠能與 AI 雙線", "purity": 2, "bottleneck": 2, "subst": 4, "cross": ["L6", "L8", "L9"], "kind": "company"}
+          ]
+        },
+        {
+          "name": "導熱關鍵件",
+          "nodes": [
+            {"code": "3653", "name": "健策", "role": "均熱片，GPU 封裝內的散熱第一道", "purity": 5, "bottleneck": 4, "subst": 2, "cross": ["L6", "L7"], "kind": "company"}
+          ]
+        }
+      ],
+      "chain": "hardware"
+    },
+    {
+      "id": "L7",
+      "name": "電源與散熱",
+      "sub": "功耗牆撐出來的新戰場",
+      "note": "單櫃功耗從一般伺服器的十幾 kW 級，跳到機櫃級 AI 系統的百 kW 級，氣冷在物理上撐不住，液冷從選配變必配。實際數字隨世代與機櫃架構變動很快，開放運算計畫的資料中心討論已延伸到250kW 以上甚至 MW 級路線，所以這裡不寫死單一數字。這層的成長不是來自出貨量，是單機價值量翻倍。（2026-09 整理）",
+      "groups": [
+        {
+          "name": "散熱模組",
+          "nodes": [
+            {"code": "3017", "name": "奇鋐", "role": "散熱大廠，氣冷與液冷雙線", "purity": 5, "bottleneck": 4, "subst": 2, "kind": "company"},
+            {"code": "3324", "name": "雙鴻", "role": "液冷水冷板，AI 純度高", "purity": 5, "bottleneck": 4, "subst": 2, "kind": "company"},
+            {"code": "3483", "name": "力致", "role": "散熱模組", "purity": 3, "bottleneck": 2, "subst": 4, "kind": "company"},
+            {"code": "3338", "name": "泰碩", "role": "熱管與均溫板", "purity": 3, "bottleneck": 2, "subst": 4, "kind": "company"},
+            {"code": "2421", "name": "建準", "role": "散熱風扇", "purity": 3, "bottleneck": 3, "subst": 3, "cross": ["L7", "L9"], "kind": "company"}
+          ]
+        },
+        {
+          "name": "液冷系統",
+          "nodes": [
+            {"code": "8996", "name": "高力", "role": "板式熱交換器與 CDU，液冷的核心件", "purity": 4, "bottleneck": 4, "subst": 2, "kind": "company"},
+            {"code": "6805", "name": "富世達", "role": "水冷快接頭 UQD 與導軌，液冷從選配變必配的直接受惠者", "purity": 5, "bottleneck": 5, "subst": 2, "kind": "company"},
+            {"code": "6125", "name": "廣運", "role": "液冷與自動化", "purity": 3, "bottleneck": 3, "subst": 3, "cross": ["L7", "L8"], "kind": "company"}
+          ]
+        },
+        {
+          "name": "電源供應",
+          "nodes": [
+            {"code": "2308", "name": "台達電", "role": "電源與散熱整合，橫跨多層但 AI 占比仍在爬升", "purity": 3, "bottleneck": 4, "subst": 2, "cross": ["L7", "L8", "L9"], "kind": "company"},
+            {"code": "2301", "name": "光寶科", "role": "伺服器電源第二大", "purity": 3, "bottleneck": 3, "subst": 3, "cross": ["L7", "L9"], "kind": "company"},
+            {"code": "6282", "name": "康舒", "role": "伺服器與工業電源", "purity": 3, "bottleneck": 2, "subst": 4, "kind": "company"},
+            {"code": "6412", "name": "群電", "role": "電源供應器", "purity": 2, "bottleneck": 2, "subst": 4, "kind": "company"},
+            {"code": "3015", "name": "全漢", "role": "電源供應器", "purity": 2, "bottleneck": 2, "subst": 4, "kind": "company"}
+          ]
+        },
+        {
+          "name": "電源用被動元件",
+          "nodes": [
+            {"code": "3357", "name": "臺慶科", "role": "高階電感，GPU 供電模組規格升級直接受惠", "purity": 3, "bottleneck": 3, "subst": 3, "kind": "company"},
+            {"code": "6449", "name": "鈺邦", "role": "捲繞型固態電容 V-Chip，GPU 高瓦數推升用量", "purity": 4, "bottleneck": 3, "subst": 3, "kind": "company"}
+          ]
+        }
+      ],
+      "chain": "infra"
+    },
+    {
+      "id": "L8",
+      "name": "場域、重電與網路",
+      "sub": "算力要有地方放、有電進來、有線連出去",
+      "note": "這層離晶片最遠，卻是實際的落地瓶頸。變壓器交期以年計，電力不足會直接卡住資料中心開通時程。",
+      "groups": [
+        {
+          "name": "重電與變壓器",
+          "nodes": [
+            {"code": "1519", "name": "華城", "role": "變壓器出口美國，交期長訂單能見度高", "purity": 3, "bottleneck": 5, "subst": 2, "kind": "company"},
+            {"code": "1503", "name": "士電", "role": "重電與馬達", "purity": 2, "bottleneck": 4, "subst": 2, "kind": "company"},
+            {"code": "1513", "name": "中興電", "role": "氣體絕緣開關與統包工程", "purity": 2, "bottleneck": 4, "subst": 2, "kind": "company"},
+            {"code": "1514", "name": "亞力", "role": "配電盤與電力設備", "purity": 2, "bottleneck": 3, "subst": 3, "kind": "company"},
+            {"code": "2371", "name": "大同", "role": "重電與電力工程", "purity": 1, "bottleneck": 3, "subst": 3, "cross": ["L8", "L9"], "kind": "company"},
+            {"code": "1504", "name": "東元", "role": "馬達與重電", "purity": 1, "bottleneck": 3, "subst": 3, "cross": ["L8", "L9"], "kind": "company"}
+          ]
+        },
+        {
+          "name": "電線電纜",
+          "nodes": [
+            {"code": "1605", "name": "華新", "role": "電纜與不鏽鋼", "purity": 1, "bottleneck": 3, "subst": 3, "kind": "company"},
+            {"code": "1609", "name": "大亞", "role": "電線電纜與綠能", "purity": 1, "bottleneck": 2, "subst": 4, "kind": "company"}
+          ]
+        },
+        {
+          "name": "資料中心與廠務工程",
+          "nodes": [
+            {"code": "5536", "name": "聖暉*", "role": "無塵室與機電統包", "purity": 3, "bottleneck": 3, "subst": 3, "cross": ["L3", "L8"], "kind": "company"},
+            {"code": "2404", "name": "漢唐", "role": "無塵室工程，台積電體系", "purity": 3, "bottleneck": 3, "subst": 3, "cross": ["L3", "L8"], "kind": "company"},
+            {"code": "6139", "name": "亞翔", "role": "無塵室工程", "purity": 3, "bottleneck": 3, "subst": 3, "cross": ["L3", "L8"], "kind": "company"},
+            {"code": "6196", "name": "帆宣", "role": "廠務系統整合與材料", "purity": 3, "bottleneck": 3, "subst": 3, "cross": ["L3", "L8"], "kind": "company"},
+            {"code": "6613", "name": "朋億", "role": "廠務化學品與水處理系統", "purity": 3, "bottleneck": 3, "subst": 3, "cross": ["L3", "L8"], "kind": "company"},
+            {"code": "6561", "name": "是方", "role": "機房代管與雲端交換，台版 IDC", "purity": 3, "bottleneck": 3, "subst": 3, "cross": ["L1", "L8"], "kind": "company"}
+          ]
+        },
+        {
+          "name": "網通交換器",
+          "nodes": [
+            {"code": "2345", "name": "智邦", "role": "高速交換器，白牌市占領先", "purity": 5, "bottleneck": 4, "subst": 2, "kind": "company"},
+            {"code": "NOK", "name": "諾基亞", "ext": true, "role": "電信網路，輝達持股並合作 AI 無線接取", "kind": "anchor"}
+          ]
+        },
+        {
+          "name": "光通訊",
+          "nodes": [
+            {"code": "LPO", "name": "LPO 線性直驅光學", "ext": true, "kind": "standard", "role": "把光模組裡的 DSP 拿掉以省電省成本。DSP 原本負責補償訊號劣化，拿掉之後對雷射光源與磊晶品質的要求不降反升，等於把價值往上游推"},
+            {"code": "3081", "name": "聯亞", "role": "矽光子 CW 雷射磊晶片。用 MOCVD 做磷化銦與砷化鎵磊晶，位在光通訊最上游。1.6T 用的 CW Laser 已量產，3.2T 送客戶驗證中", "purity": 5, "bottleneck": 5, "subst": 1, "kind": "company"},
+            {"code": "6451", "name": "訊芯-KY", "role": "鴻海集團的光收發模組與 SiP 封裝廠，河內產 100G／200G、廣州產 400G／800G，與博通在 CPO 長期合作", "purity": 5, "bottleneck": 5, "subst": 2, "kind": "company"},
+            {"code": "6442", "name": "光聖", "role": "光纖連接與資料中心佈線", "purity": 4, "bottleneck": 3, "subst": 3, "kind": "company"},
+            {"code": "3163", "name": "波若威", "role": "光被動元件", "purity": 3, "bottleneck": 3, "subst": 3, "kind": "company"},
+            {"code": "3363", "name": "上詮", "role": "光纖陣列，共同封裝光學受惠", "purity": 4, "bottleneck": 4, "subst": 2, "kind": "company"},
+            {"code": "3450", "name": "聯鈞", "role": "光通訊模組", "purity": 3, "bottleneck": 3, "subst": 3, "kind": "company"},
+            {"code": "4979", "name": "華星光", "role": "光收發模組", "purity": 3, "bottleneck": 3, "subst": 3, "kind": "company"},
+            {"code": "COHR", "name": "Coherent", "ext": true, "role": "光通訊元件大廠，輝達持股對象，CPO 的關鍵外部節點", "kind": "anchor"}
+          ]
+        }
+      ],
+      "chain": "infra"
+    },
+    {
+      "id": "L9",
+      "name": "應用與終端",
+      "sub": "算力回流到裝置",
+      "note": "第二波受惠。訓練需求集中在雲端，推論會往裝置端跑。邊緣 AI 不是只有消費性 AI PC，工業邊緣才是推論真正落地的地方，設備汰換週期也比消費端長。",
+      "groups": [
+        {
+          "name": "AI PC",
+          "nodes": [
+            {"code": "2357", "name": "華碩", "role": "AI PC 與伺服器品牌雙線", "purity": 2, "bottleneck": 2, "subst": 4, "cross": ["L1", "L6", "L9"], "kind": "company"},
+            {"code": "2353", "name": "宏碁", "role": "AI PC 品牌", "purity": 1, "bottleneck": 1, "subst": 5, "kind": "company"},
+            {"code": "2324", "name": "仁寶", "role": "筆電代工", "purity": 1, "bottleneck": 1, "subst": 5, "cross": ["L6", "L9"], "kind": "company"},
+            {"code": "4938", "name": "和碩", "role": "代工，AI 伺服器新進者", "purity": 2, "bottleneck": 2, "subst": 4, "cross": ["L6", "L9"], "kind": "company"}
+          ]
+        },
+        {
+          "name": "光學與手機",
+          "nodes": [
+            {"code": "3008", "name": "大立光", "role": "高階光學鏡頭", "purity": 1, "bottleneck": 4, "subst": 2, "kind": "company"},
+            {"code": "3406", "name": "玉晶光", "role": "光學鏡頭與頭戴裝置", "purity": 1, "bottleneck": 3, "subst": 3, "kind": "company"}
+          ]
+        },
+        {
+          "name": "機器人與自動化",
+          "nodes": [
+            {"code": "2049", "name": "上銀", "role": "滾珠螺桿與線性傳動，人形機器人關鍵件", "purity": 2, "bottleneck": 4, "subst": 2, "kind": "company"},
+            {"code": "1597", "name": "直得", "role": "線性滑軌", "purity": 2, "bottleneck": 3, "subst": 3, "kind": "company"},
+            {"code": "2359", "name": "所羅門", "role": "機器視覺與 AI 取放", "purity": 3, "bottleneck": 3, "subst": 3, "kind": "company"},
+            {"code": "6188", "name": "廣明", "role": "協作機器人", "purity": 2, "bottleneck": 3, "subst": 3, "kind": "company"},
+            {"code": "1590", "name": "亞德客-KY", "role": "氣動元件", "purity": 1, "bottleneck": 3, "subst": 3, "kind": "company"}
+          ]
+        },
+        {
+          "name": "工業邊緣與車用",
+          "nodes": [
+            {"code": "2231", "name": "為升", "role": "車用感測", "purity": 1, "bottleneck": 2, "subst": 4, "kind": "company"},
+            {"code": "3552", "name": "同致", "role": "車用輔助駕駛", "purity": 1, "bottleneck": 2, "subst": 4, "kind": "company"},
+            {"code": "2395", "name": "研華", "role": "工業電腦市占領先，邊緣推論落地主力", "purity": 2, "bottleneck": 3, "subst": 3, "cross": ["L6", "L9"], "kind": "company"},
+            {"code": "6414", "name": "樺漢", "role": "工業電腦與系統整合，鴻海體系", "purity": 2, "bottleneck": 2, "subst": 4, "cross": ["L6", "L9"], "kind": "company"},
+            {"code": "7749", "name": "意騰-KY", "kind": "company", "role": "AI 聲學與語音辨識 ASIC，終端為 TWS 耳機與遊戲機，屬消費性邊緣不是資料中心", "purity": 1, "bottleneck": 2, "subst": 4}
+          ]
+        }
+      ],
+      "chain": "demand"
+    }
+  ],
+  "edges": [
+    {"from": "NVDA", "to": "2330", "type": "alliance", "note": "先進製程與 CoWoS 唯一來源，替換成本近乎無限大", "conf": "common"},
+    {"from": "NVDA", "to": "3711", "type": "alliance", "note": "封裝與測試主力夥伴", "conf": "common"},
+    {"from": "NVDA", "to": "2454", "type": "alliance", "note": "共同開發 AI PC 與桌上型超級電腦晶片", "conf": "common"},
+    {"from": "NVDA", "to": "HYNIX", "type": "alliance", "note": "HBM 主力供應，認證門檻極高", "conf": "common"},
+    {"from": "NVDA", "to": "2317", "type": "supply", "note": "機櫃級系統組裝主力", "conf": "common"},
+    {"from": "NVDA", "to": "2382", "type": "supply", "note": "AI 伺服器 ODM", "conf": "common"},
+    {"from": "NVDA", "to": "3231", "type": "supply", "note": "GPU 主板與模組", "conf": "common"},
+    {"from": "NVDA", "to": "6669", "type": "supply", "note": "白牌伺服器直供 CSP", "conf": "common"},
+    {"from": "NVDA", "to": "2356", "type": "supply", "note": "AI 伺服器 ODM", "conf": "common"},
+    {"from": "NVDA", "to": "2345", "type": "supply", "note": "交換器與網路架構", "conf": "common"},
+    {"from": "NVDA", "to": "2383", "type": "supply", "note": "高階 CCL 平台指定料號", "conf": "common"},
+    {"from": "NVDA", "to": "2368", "type": "supply", "note": "伺服器主機板 PCB", "conf": "common"},
+    {"from": "NVDA", "to": "3037", "type": "supply", "note": "ABF 載板承載 GPU 晶片", "conf": "common"},
+    {"from": "NVDA", "to": "3653", "type": "supply", "note": "GPU 封裝均熱片", "conf": "common"},
+    {"from": "NVDA", "to": "3017", "type": "supply", "note": "散熱模組", "conf": "common"},
+    {"from": "NVDA", "to": "3324", "type": "supply", "note": "液冷水冷板", "conf": "common"},
+    {"from": "NVDA", "to": "2308", "type": "supply", "note": "機櫃電源與電源架。800V HVDC 架構由台達電 2027 第一季小量投產、第二季放量", "conf": "reported", "checked": "2026-09-24"},
+    {"from": "NVDA", "to": "3533", "type": "supply", "note": "GPU 與 CPU 插槽連接器", "conf": "common"},
+    {"from": "NVDA", "to": "3665", "type": "supply", "note": "高速線材", "conf": "common"},
+    {"from": "NVDA", "to": "2059", "type": "supply", "note": "機櫃滑軌", "conf": "common"},
+    {"from": "NVDA", "to": "8210", "type": "supply", "note": "伺服器機殼", "conf": "common"},
+    {"from": "NVDA", "to": "5274", "type": "supply", "note": "伺服器管理晶片", "conf": "common"},
+    {"from": "AMD", "to": "2330", "type": "alliance", "note": "先進製程代工", "conf": "common"},
+    {"from": "AMD", "to": "3711", "type": "alliance", "note": "封測", "conf": "common"},
+    {"from": "AMD", "to": "3231", "type": "supply", "note": "MI 系列主板與模組主力", "conf": "common"},
+    {"from": "AMD", "to": "2317", "type": "supply", "note": "系統組裝", "conf": "common"},
+    {"from": "AMD", "to": "2382", "type": "supply", "note": "系統組裝", "conf": "common"},
+    {"from": "AMD", "to": "3017", "type": "supply", "note": "散熱", "conf": "common"},
+    {"from": "AMD", "to": "MU", "type": "alliance", "note": "HBM 供應", "conf": "common"},
+    {"from": "AMD", "to": "NVDA", "type": "substitute", "note": "加速器路線之爭，CSP 導入第二來源的主要選項", "conf": "common"},
+    {"from": "AVGO", "to": "2330", "type": "alliance", "note": "ASIC 先進製程代工", "conf": "common"},
+    {"from": "AVGO", "to": "6669", "type": "supply", "note": "TPU 系統主力組裝", "conf": "common"},
+    {"from": "AVGO", "to": "NVDA", "type": "substitute", "note": "自研 ASIC 路線挑戰通用 GPU", "conf": "common"},
+    {"from": "GOOGL", "to": "AVGO", "type": "alliance", "note": "TPU 共同設計", "conf": "common"},
+    {"from": "AMZN", "to": "3661", "type": "alliance", "conf": "reported", "note": "Trainium 3 已量產，Trainium 4 的運算晶片與 I/O 晶片也由世芯負責", "checked": "2026-09-24"},
+    {"from": "META", "to": "3443", "type": "alliance", "conf": "reported", "note": "供應鏈追蹤指創意可能取得 Meta 由 Rivos 團隊主導的 ASIC 專案，公司未證實", "checked": "2026-09-24"},
+    {"from": "3583", "to": "2330", "type": "supply", "note": "先進封裝濕製程設備", "conf": "common"},
+    {"from": "3131", "to": "2330", "type": "supply", "note": "封裝濕製程設備", "conf": "common"},
+    {"from": "3680", "to": "2330", "type": "supply", "note": "EUV 光罩傳送盒", "conf": "common"},
+    {"from": "6488", "to": "2330", "type": "supply", "note": "矽晶圓", "conf": "common"},
+    {"from": "1560", "to": "2330", "type": "supply", "note": "鑽石碟與再生晶圓", "conf": "common"},
+    {"from": "5434", "to": "2330", "type": "supply", "note": "材料通路", "conf": "common"},
+    {"from": "2404", "to": "2330", "type": "supply", "note": "無塵室與廠務工程", "conf": "common"},
+    {"from": "6196", "to": "2330", "type": "supply", "note": "廠務系統整合", "conf": "common"},
+    {"from": "2330", "to": "3443", "type": "alliance", "note": "轉投資並列為最大設計服務夥伴", "conf": "common"},
+    {"from": "2330", "to": "3711", "type": "supply", "note": "晶圓交由封測廠後段處理", "conf": "common"},
+    {"from": "2330", "to": "2449", "type": "supply", "note": "委外測試", "conf": "common"},
+    {"from": "HYNIX", "to": "2408", "type": "crowding", "note": "HBM 吃掉晶圓與封裝產能，一般 DRAM 供給緊縮而漲價", "conf": "common"},
+    {"from": "MU", "to": "2344", "type": "crowding", "note": "大廠產能轉進 HBM，利基型記憶體供給退出", "conf": "common"},
+    {"from": "HYNIX", "to": "2449", "type": "supply", "note": "HBM 堆疊後測試時間拉長", "conf": "common"},
+    {"from": "HYNIX", "to": "6257", "type": "supply", "note": "記憶體測試", "conf": "common"},
+    {"from": "NVDA", "to": "3189", "type": "crowding", "note": "AI 載板吃掉產能，一般覆晶載板報價回升", "conf": "common"},
+    {"from": "HYNIX", "to": "CXL", "type": "substitute", "note": "記憶體池化搶容量任務", "conf": "common"},
+    {"from": "HYNIX", "to": "HBF", "type": "substitute", "note": "快閃堆疊挑戰 HBM 的容量定位", "conf": "common"},
+    {"from": "8299", "to": "HBF", "type": "alliance", "note": "以控制 IC 與方案切入快閃擴充記憶體", "conf": "common"},
+    {"from": "2317", "to": "3533", "type": "supply", "note": "採購連接器", "conf": "common"},
+    {"from": "2317", "to": "2059", "type": "supply", "note": "採購滑軌", "conf": "common"},
+    {"from": "2317", "to": "8210", "type": "supply", "note": "採購機殼", "conf": "common"},
+    {"from": "2317", "to": "3017", "type": "supply", "note": "採購散熱模組", "conf": "common"},
+    {"from": "2317", "to": "2308", "type": "supply", "note": "採購電源", "conf": "common"},
+    {"from": "2317", "to": "2368", "type": "supply", "note": "採購伺服器 PCB", "conf": "common"},
+    {"from": "6669", "to": "3324", "type": "supply", "note": "採購液冷方案", "conf": "common"},
+    {"from": "6669", "to": "8996", "type": "supply", "note": "採購熱交換與 CDU", "conf": "common"},
+    {"from": "3017", "to": "8996", "type": "substitute", "note": "氣冷與液冷的路線競爭，液冷正在取代高功耗機櫃的氣冷", "conf": "common"},
+    {"from": "3037", "to": "5443", "type": "substitute", "note": "ABF 載板與面板級封裝的長線路線競爭", "conf": "common"},
+    {"from": "3711", "to": "2330", "type": "substitute", "note": "FOPLP 面板級封裝是 CoWoS 產能瓶頸的分流方案", "conf": "common"},
+    {"from": "3661", "to": "NVDA", "type": "substitute", "note": "ASIC 專用晶片壓縮通用 GPU 的推論市場", "conf": "common"},
+    {"from": "OPENAI", "to": "1519", "type": "supply", "note": "自建資料中心帶動變壓器需求", "conf": "common"},
+    {"from": "OPENAI", "to": "2330", "type": "alliance", "note": "自研晶片投片", "conf": "common"},
+    {"from": "SOVEREIGN", "to": "2382", "type": "supply", "note": "國家級算力採購", "conf": "common"},
+    {"from": "MSFT", "to": "NVDA", "type": "supply", "note": "最大 GPU 採購方之一", "conf": "common"},
+    {"from": "GOOGL", "to": "6669", "type": "supply", "note": "TPU 機櫃直接下單", "conf": "common"},
+    {"from": "META", "to": "2382", "type": "supply", "note": "AI 伺服器採購", "conf": "common"},
+    {"from": "AMZN", "to": "6669", "type": "supply", "note": "白牌伺服器採購", "conf": "common"},
+    {"from": "NVDA", "to": "3081", "type": "supply", "note": "光互連磊晶", "conf": "common"},
+    {"from": "NVDA", "to": "3363", "type": "supply", "note": "共同封裝光學的光纖陣列", "conf": "common"},
+    {"from": "2345", "to": "4979", "type": "supply", "note": "交換器搭配光收發模組", "conf": "common"},
+    {"from": "1519", "to": "1605", "type": "supply", "note": "採購電纜材料", "conf": "common"},
+    {"from": "NVDA", "to": "6515", "type": "supply", "note": "高腳數測試座", "conf": "common"},
+    {"from": "2330", "to": "6510", "type": "supply", "note": "探針卡", "conf": "common"},
+    {"from": "NVDA", "to": "2357", "type": "supply", "note": "AI PC 晶片", "conf": "common"},
+    {"from": "2454", "to": "2357", "type": "supply", "note": "AI PC 與行動晶片", "conf": "common"},
+    {"from": "NVDA", "to": "OPENAI", "type": "equity", "note": "2026 年 2 月投資 OpenAI，半導體公司對 AI 實驗室史上最大一筆入股", "conf": "reported", "checked": "2026-09-03"},
+    {"from": "NVDA", "to": "INTC", "type": "equity", "note": "入股英特爾，帳面獲利數倍。競爭對手同時是持股對象", "conf": "disclosed", "checked": "2026-09-24"},
+    {"from": "NVDA", "to": "XAI", "type": "equity", "note": "投資 xAI，該公司 2026 年 2 月與 SpaceX 合併，輝達因此間接持有 SpaceX", "conf": "reported", "checked": "2026-09-03"},
+    {"from": "NVDA", "to": "CRWV", "type": "equity", "note": "入股 CoreWeave 並綁定機房建置，等於自己出錢養客戶", "conf": "disclosed", "checked": "2026-09-24"},
+    {"from": "NVDA", "to": "NBIS", "type": "equity", "note": "以預付認股權證方式投資 20 億美元，所以 13F 上只看得到小部位，附帶機房部署承諾", "conf": "disclosed", "checked": "2026-09-24"},
+    {"from": "NVDA", "to": "NOK", "type": "equity", "note": "入股諾基亞，把 AI 推向電信網路邊緣", "conf": "disclosed", "checked": "2026-09-24"},
+    {"from": "NVDA", "to": "COHR", "type": "equity", "note": "入股 Coherent，卡位光通訊元件", "conf": "disclosed", "checked": "2026-09-24"},
+    {"from": "NVDA", "to": "SNPS", "type": "equity", "note": "入股新思科技，往 EDA 與 IP 上游延伸", "conf": "disclosed", "checked": "2026-09-24"},
+    {"from": "2357", "to": "4938", "type": "group", "note": "和碩由華碩分割而來，同屬華碩集團體系", "conf": "common"},
+    {"from": "2357", "to": "3189", "type": "group", "note": "景碩屬華碩集團體系，這是你舉的例子的完整版", "conf": "common"},
+    {"from": "3231", "to": "6669", "type": "group", "note": "緯穎由緯創分割，緯創為最大股東", "conf": "common"},
+    {"from": "2330", "to": "3443", "type": "group", "note": "創意為台積電轉投資", "conf": "common"},
+    {"from": "2330", "to": "3374", "type": "group", "note": "精材為台積電子公司", "conf": "common"},
+    {"from": "2330", "to": "6789", "type": "group", "note": "采鈺為台積電轉投資", "conf": "common"},
+    {"from": "2330", "to": "5347", "type": "group", "note": "世界先進為台積電轉投資", "conf": "common"},
+    {"from": "2303", "to": "3035", "type": "group", "note": "智原屬聯電集團", "conf": "common"},
+    {"from": "1802", "to": "2383", "type": "supply", "note": "高階玻纖布供給 CCL 廠，缺口看到 2027 年底", "conf": "common"},
+    {"from": "1815", "to": "6274", "type": "supply", "note": "低介電玻纖布", "conf": "common"},
+    {"from": "8358", "to": "2383", "type": "supply", "note": "HVLP 高階銅箔，與玻纖布同為結構性缺貨環節", "conf": "common"},
+    {"from": "2330", "to": "5347", "type": "substitute", "note": "CoPoS 放量讓成熟製程從殺價競爭轉為結構性需求", "conf": "common"},
+    {"from": "2330", "to": "6223", "type": "supply", "note": "矽光子晶圓級檢測，CPO 量產的真瓶頸", "conf": "common"},
+    {"from": "2330", "to": "3583", "type": "alliance", "note": "CoPoS 方形基板的清洗蝕刻去膠，濕製程設備是關鍵", "conf": "common"},
+    {"from": "COHR", "to": "3081", "type": "substitute", "note": "國際光元件大廠與台廠磊晶的競合", "conf": "common"},
+    {"from": "2330", "to": "6640", "type": "supply", "note": "CoWoS 產線的晶片挑揀設備", "conf": "common"},
+    {"from": "2330", "to": "2360", "type": "supply", "note": "系統級測試與電力測試設備", "conf": "common"},
+    {"from": "NVDA", "to": "2360", "type": "supply", "note": "AI 晶片 SLT 測試工時大幅拉長", "conf": "common"},
+    {"from": "NVDA", "to": "8155", "type": "supply", "note": "高層數伺服器與交換器板", "conf": "common"},
+    {"from": "NVDA", "to": "6805", "type": "supply", "note": "液冷快接頭 UQD", "conf": "common"},
+    {"from": "NVDA", "to": "6449", "type": "supply", "note": "GPU 瓦數推升固態電容用量", "conf": "common"},
+    {"from": "NVDA", "to": "3357", "type": "supply", "note": "供電模組高階電感", "conf": "common"},
+    {"from": "AVGO", "to": "6451", "type": "alliance", "conf": "reported", "note": "與博通在 CPO 矽光子長期合作", "checked": "2026-09-24"},
+    {"from": "NVDA", "to": "2395", "type": "supply", "note": "邊緣推論模組與工業電腦平台", "conf": "common"},
+    {"from": "2382", "to": "3013", "type": "supply", "note": "機櫃與水冷機箱代工", "conf": "common"},
+    {"from": "6584", "to": "2059", "type": "substitute", "note": "滑軌第二來源，直接對標川湖的獨佔地位", "conf": "common"},
+    {"from": "2317", "to": "6451", "type": "group", "note": "訊芯屬鴻海集團體系", "conf": "reported", "checked": "2026-09-24"},
+    {"from": "2317", "to": "6414", "type": "group", "note": "樺漢為鴻海轉投資", "conf": "common"},
+    {"from": "MSFT", "to": "6811", "type": "supply", "note": "微軟體系的公部門與企業落地夥伴", "conf": "common"},
+    {"from": "AMZN", "to": "6689", "type": "supply", "note": "AWS 核心託管夥伴", "conf": "common"},
+    {"from": "8299", "to": "4966", "type": "substitute", "note": "高速傳輸晶片重疊，群聯由儲存往 PCIe 訊號延伸", "conf": "common"},
+    {"from": "HYNIX", "to": "COWOS", "type": "supply", "note": "HBM 堆疊進中介層", "conf": "disclosed", "checked": "2026-09-24"},
+    {"from": "2330", "to": "COWOS", "type": "alliance", "note": "CoWoS 為台積電的整合封裝平台", "conf": "disclosed", "checked": "2026-09-24"},
+    {"from": "COWOS", "to": "NVDA", "type": "supply", "note": "封裝完成的運算模組交付給晶片商", "conf": "disclosed", "checked": "2026-09-24"},
+    {"from": "COWOS", "to": "3583", "type": "supply", "note": "中介層與方形基板的濕製程需求", "conf": "common"},
+    {"from": "COWOS", "to": "6640", "type": "supply", "note": "封裝前的晶片挑揀", "conf": "common"},
+    {"from": "NVDA", "to": "RACK", "type": "alliance", "note": "機櫃級系統由晶片商定義整體架構", "conf": "reported", "checked": "2026-09-24"},
+    {"from": "RACK", "to": "2317", "type": "supply", "note": "機櫃整機組裝", "conf": "common"},
+    {"from": "RACK", "to": "6669", "type": "supply", "note": "機櫃整機組裝", "conf": "common"},
+    {"from": "RACK", "to": "3324", "type": "supply", "note": "機櫃液冷方案", "conf": "common"},
+    {"from": "RACK", "to": "6805", "type": "supply", "note": "機櫃液冷快接頭", "conf": "common"},
+    {"from": "RACK", "to": "2308", "type": "supply", "note": "機櫃電源架與匯流排", "conf": "common"},
+    {"from": "RACK", "to": "2345", "type": "supply", "note": "機櫃內外的高速網路", "conf": "common"},
+    {"from": "2330", "to": "COUPE", "type": "alliance", "note": "COUPE 為台積電的矽光子整合平台", "conf": "disclosed", "checked": "2026-09-16"},
+    {"from": "COUPE", "to": "COWOS", "type": "alliance", "note": "COUPE 是在 CoWoS 平台上運作的光引擎模組，2026 整合進 CoWoS 封裝，不是取代它", "conf": "disclosed", "checked": "2026-09-16"},
+    {"from": "COUPE", "to": "CPO", "type": "alliance", "note": "COUPE 是台積電實作 CPO 架構的平台", "conf": "common", "checked": "2026-09-16"},
+    {"from": "CPO", "to": "6451", "type": "supply", "note": "光引擎的 SiP 先進封裝", "conf": "reported", "checked": "2026-09-16"},
+    {"from": "CPO", "to": "3363", "type": "supply", "note": "光學被動元件與耦合", "conf": "common", "checked": "2026-09-16"},
+    {"from": "CPO", "to": "3081", "type": "supply", "note": "磊晶與雷射晶粒", "conf": "common", "checked": "2026-09-16"},
+    {"from": "CPO", "to": "6223", "type": "supply", "note": "光電混合檢測，量產的真瓶頸", "conf": "reported", "checked": "2026-09-16"},
+    {"from": "CPO", "to": "2345", "type": "supply", "note": "交換器導入 CPO 後的整機設計", "conf": "common", "checked": "2026-09-16"},
+    {"from": "CPO", "to": "5347", "type": "supply", "note": "光子晶片 PIC 用成熟製程節點", "conf": "common", "checked": "2026-09-16"},
+    {"from": "NVDA", "to": "CPO", "type": "alliance", "note": "交換器世代導入共同封裝光學", "conf": "reported", "checked": "2026-09-16"},
+    {"from": "NVDA", "to": "6526", "type": "supply", "note": "高速 SerDes 與乙太互連", "conf": "inferred", "checked": "2026-09-16"},
+    {"from": "2454", "to": "6526", "type": "group", "note": "聯發科持有達發約七成股權", "checked": "2026-09-16"},
+    {"from": "2330", "to": "6683", "type": "supply", "note": "測試介面與治具", "conf": "common", "checked": "2026-09-16"},
+    {"from": "2454", "to": "6533", "type": "substitute", "note": "CPU IP 路線與自研核心的取捨", "conf": "common"},
+    {"from": "6526", "to": "8040", "type": "group", "note": "九暘為達發子公司", "conf": "disclosed", "checked": "2026-09-16"},
+    {"from": "3081", "to": "CPO", "type": "supply", "note": "CW 雷射磊晶片是矽光子光模組的光源，1.6T 已量產、3.2T 驗證中", "conf": "reported", "checked": "2026-09-16"},
+    {"from": "3081", "to": "LPO", "type": "alliance", "note": "LPO 拿掉 DSP 之後，訊號品質全靠雷射光源本身，對磊晶品質的要求反而更高", "conf": "common", "checked": "2026-09-16"},
+    {"from": "5483", "to": "6488", "type": "group", "note": "環球晶為中美晶旗下子公司", "conf": "common", "checked": "2026-09-24"},
+    {"from": "3707", "to": "3016", "type": "group", "note": "漢磊與嘉晶同屬漢民集團", "conf": "reported", "checked": "2026-09-24"},
+    {"from": "NAVITAS", "to": "6770", "type": "supply", "note": "納微 100V 至 650V GaN 功率元件轉由力積電竹南 8B 廠代工，100V 系列 2026 上半年量產", "conf": "disclosed", "checked": "2026-09-24"},
+    {"from": "2330", "to": "5347", "type": "alliance", "note": "台積電授權 GaN 製程技術給世界先進，2028 上半年量產", "conf": "disclosed", "checked": "2026-09-24"},
+    {"from": "3443", "to": "6669", "type": "alliance", "note": "創意與緯穎宣布策略技術合作，結合 2.5D／3D 先進封裝與機櫃液冷整合", "conf": "disclosed", "checked": "2026-09-24"},
+    {"from": "6488", "to": "MU", "type": "supply", "note": "與美光簽十年長約，含策略資金與逾 5 億美元預付款", "conf": "disclosed", "checked": "2026-09-24"}
+  ]
+}

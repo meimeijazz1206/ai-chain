@@ -1,0 +1,44 @@
+# 發布網站到 GitHub Pages。
+# 每次推送到 main 就跑；每日報價流程也會在更新完資料後觸發它。
+# 自我檢查沒通過就不發布：寧可網站停在舊資料，也不要推上錯的東西。
+name: 發布網站
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: 自我檢查（不通過就不發布）
+        run: python scripts/verify.py
+      - name: 建置網站
+        run: python scripts/build_site.py
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

@@ -1,0 +1,18 @@
+# ── 刻意不公開 ─────────────────────────────────────────────
+# 產品拆解還在開發中。公開 repo 會讓所有追蹤的檔案被任何人看到，
+# 所以不能只靠「不部署」，必須連 git 都不追蹤。
+teardown.html
+data/products.json
+
+# 本機工具設定（Claude 預覽、Codex 託管），跟網站內容無關
+.claude/
+.openai/
+
+# ── 建置產物 ───────────────────────────────────────────────
+# dist/ 是本機打包 Artifact 用的，裡面內嵌過 Yahoo 的報價，不能公開
+dist/
+# GitHub Pages 由 Actions 從原始檔建置，不提交建置結果
+_site/
+__pycache__/
+*.pyc
+.DS_Store

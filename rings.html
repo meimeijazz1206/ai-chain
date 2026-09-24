@@ -1,0 +1,617 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>台股 AI 供應鏈爆炸環</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+:root{
+  --bg:#F7F6F2; --paper:#FFFFFF; --ink:#16181D; --ink2:#4E5464; --ink3:#6E7686;
+  --line:#E3E1DA; --line2:#CFCDC4;
+  --note:#2F5D70; --note-bg:#EDF4F7; --note-line:#8FB8C8;
+  --warn:#8A4A0E; --warn-bg:#FDF4E7; --warn-line:#DFB472;
+  --L0:#3B3FC9; --L1:#5A4BD4; --L2:#0E7C93; --L3:#0E9A96; --L4:#1D9B58;
+  --L5:#6F9E12; --L6:#C99000; --L7:#E0611A; --L8:#D02C63; --L9:#8B3FC9;
+  --supply:#1D9B58; --alliance:#3B3FC9; --substitute:#E0611A; --crowding:#D02C63;
+  --equity:#8B3FC9; --group:#0E7C93;
+  --sans:"Noto Sans TC","PingFang TC","Helvetica Neue",-apple-system,"Microsoft JhengHei",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font:16.5px/1.6 var(--sans);-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+:focus-visible{outline:2px solid var(--ink);outline-offset:2px;border-radius:4px}
+
+header.top{max-width:1720px;margin:0 auto;padding:30px 28px 14px}
+.kicker{font-size:12.5px;letter-spacing:.22em;color:var(--ink3);text-transform:uppercase}
+h1{font-size:30.5px;line-height:1.25;margin:8px 0 6px;letter-spacing:-.01em;font-weight:700}
+.lede{color:var(--ink2);max-width:68ch;font-size:15.5px;margin:0}
+.stamp{margin-top:11px;font-size:13.5px;color:var(--ink3)}
+.stamp b{color:var(--ink2);font-weight:600}
+.switch{display:inline-flex;border:1px solid var(--line2);border-radius:99px;overflow:hidden;margin-top:14px}
+.switch a{padding:6px 16px;font-size:14px;text-decoration:none;color:var(--ink2);background:var(--paper)}
+.switch a.now{background:var(--ink);color:#fff}
+.switch a:hover:not(.now){background:#EFEDE6;color:var(--ink)}
+
+.wrap{display:grid;grid-template-columns:214px minmax(0,1fr);gap:26px;max-width:1720px;margin:0 auto;padding:10px 28px 80px;align-items:start}
+.side{position:sticky;top:16px;align-self:start}
+.s-t{font-size:11px;letter-spacing:.14em;color:var(--ink3);text-transform:uppercase;margin:16px 0 7px;
+  border-top:1px solid var(--line);padding-top:11px}
+.s-t:first-child{border-top:0;margin-top:0;padding-top:0}
+.chainhead{font-size:11px;letter-spacing:.1em;color:var(--ink3);margin:9px 0 4px;padding-left:3px}
+.lrow{display:flex;align-items:center;gap:8px;width:100%;text-align:left;padding:5px 8px;border-radius:6px;
+  border-left:3px solid var(--c);font-size:14px;color:var(--ink2);transition:.14s}
+.lrow:hover{background:#EFEDE6;color:var(--ink)}
+.lrow.on{background:var(--ink);color:#fff}
+.lrow .n{font:600 11.5px var(--mono);color:var(--ink3);min-width:18px}
+.lrow .k{margin-left:auto;font:600 11.5px var(--mono);color:var(--ink3)}
+.lrow.on .n,.lrow.on .k{color:#C9CCD4}
+.gbtn{display:block;width:100%;text-align:left;padding:5px 9px;border-radius:6px;font-size:14px;color:var(--ink2);
+  border:1px dashed var(--line2);margin-bottom:4px;transition:.14s}
+.gbtn:hover{border-color:var(--ink3);color:var(--ink);background:var(--paper)}
+.reset{margin-top:12px;width:100%;border:1px solid var(--line2);border-radius:99px;padding:6px;font-size:13.5px;color:var(--ink2)}
+.reset:hover{border-color:var(--ink);color:var(--ink)}
+.s-note{font-size:12.5px;color:var(--ink3);line-height:1.6;margin-top:14px}
+
+.stage{position:relative;background:linear-gradient(#FFFFFF,#F4F2EC);border:1px solid var(--line);
+  border-radius:14px;overflow:hidden}
+svg#viz{display:block;width:100%;height:auto}
+.disc{cursor:pointer}
+.disc.dim{opacity:.42}
+.sector{transition:opacity .18s}
+.sector:hover{filter:brightness(1.07)}
+.sector.mute{opacity:.16}
+.wall{pointer-events:none}
+.shadow{pointer-events:none}
+.dlabel{font-size:13.5px;font-weight:700;fill:var(--ink);pointer-events:none}
+.dsub{font-size:11.5px;fill:var(--ink3);pointer-events:none}
+.dcount{font:600 11.5px var(--mono);fill:var(--ink3);pointer-events:none}
+.lead{stroke:var(--line2);stroke-width:1;fill:none;pointer-events:none}
+.nodelbl{font-size:11.5px;font-weight:650;fill:var(--ink);pointer-events:none;
+  paint-order:stroke;stroke:rgba(255,255,255,.9);stroke-width:2.8px;stroke-linejoin:round}
+.codelbl{font:600 9.5px var(--mono);fill:var(--ink3);pointer-events:none;
+  paint-order:stroke;stroke:rgba(255,255,255,.9);stroke-width:2.4px;stroke-linejoin:round}
+.hubt{font-size:13px;font-weight:700;fill:var(--ink);text-anchor:middle;pointer-events:none}
+.hubs{font-size:10.5px;fill:var(--ink3);text-anchor:middle;pointer-events:none}
+.sat{cursor:pointer}
+.sat rect{fill:var(--paper);stroke:var(--line2);stroke-width:1.2}
+.sat:hover rect{stroke:var(--ink)}
+.sat.on rect{fill:var(--ink);stroke:var(--ink)}
+.sat text{font-size:12.5px;font-weight:650;fill:var(--ink);pointer-events:none}
+.sat.on text{fill:#fff}
+.chainlbl{font-size:10.5px;letter-spacing:.2em;fill:var(--ink3);text-transform:uppercase;pointer-events:none}
+.chainbar{stroke:var(--line2);stroke-width:2;fill:none;pointer-events:none}
+
+/* 待機時整疊圓盤輕微浮動，選取或減少動態時停住 */
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+.floating .disc{animation:bob 7s ease-in-out infinite}
+@media(prefers-reduced-motion:reduce){.floating .disc{animation:none}}
+
+.tip{position:absolute;pointer-events:none;background:var(--ink);color:#fff;border-radius:8px;padding:8px 11px;
+  font-size:13px;line-height:1.5;max-width:250px;opacity:0;transition:opacity .12s;z-index:20}
+.tip.on{opacity:1}
+.tip b{font-size:14.5px}
+.tip .c{font:600 11px var(--mono);opacity:.7;margin-left:5px}
+.tip .r{display:block;opacity:.78;font-size:12px;margin-top:3px}
+.tip .q{display:block;font:600 12.5px var(--mono);margin-top:5px}
+.legend{display:flex;flex-wrap:wrap;gap:14px;padding:12px 18px;border-top:1px solid var(--line);
+  font-size:12.5px;color:var(--ink3);align-items:center;background:var(--paper)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:18px;height:2.5px;border-radius:2px;display:inline-block;font-style:normal}
+
+.panel{display:none;background:var(--paper);border:1px solid var(--line2);border-radius:14px;
+  box-shadow:0 12px 34px rgba(0,0,0,.08);min-width:0;overflow:hidden;flex-direction:column}
+.panel.on{display:flex}
+/* 寬螢幕：詳情是第三欄，不覆蓋圖，也不改變頁面捲動位置。 */
+@media(min-width:1280px){
+  body.shift .wrap{grid-template-columns:214px minmax(520px,1fr) 390px}
+  .panel{grid-column:3;grid-row:1;position:sticky;top:16px;height:calc(100vh - 32px)}
+}
+/* 中型螢幕：詳情接在圖下方，保留完整畫布寬度。 */
+@media(min-width:1001px) and (max-width:1279px){
+  .panel{grid-column:2;grid-row:2;position:relative;max-height:72vh}
+}
+.p-head{padding:20px 22px 15px;border-bottom:1px solid var(--line);position:relative}
+.p-close{position:absolute;top:14px;right:15px;font-size:21px;color:var(--ink3);line-height:1;padding:5px}
+.p-close:hover{color:var(--ink)}
+.p-layer{font-size:12px;letter-spacing:.13em;text-transform:uppercase;color:var(--c);font-weight:700}
+.p-name{font-size:23px;font-weight:700;margin:5px 0 2px;letter-spacing:-.01em}
+.p-code{font:600 13px var(--mono);color:var(--ink3)}
+.p-role{font-size:14.5px;color:var(--ink2);margin-top:9px;line-height:1.65}
+.p-body{flex:1;overflow-y:auto;padding:18px 22px 40px}
+.sect{margin-bottom:22px}
+.sect-t{font-size:12px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink3);margin-bottom:10px;
+  display:flex;align-items:center;gap:9px}
+.sect-t::after{content:"";flex:1;height:1px;background:var(--line)}
+.metric{display:grid;grid-template-columns:70px 1fr 28px;gap:9px;align-items:center;margin-bottom:7px;font-size:13.5px}
+.metric .mn{color:var(--ink2)}
+.track{height:5px;background:#EDEBE4;border-radius:99px;overflow:hidden}
+.fill{height:100%;background:var(--c);border-radius:99px}
+.metric .mv{font:600 12.5px var(--mono);color:var(--ink3);text-align:right}
+.mhint{font-size:13.5px;color:var(--note);line-height:1.65;margin-top:10px;background:var(--note-bg);
+  border-left:2px solid var(--note-line);border-radius:0 6px 6px 0;padding:9px 12px}
+.mhint b{color:var(--note);font-weight:700}
+.warn{display:block;margin-top:7px;color:var(--warn);background:var(--warn-bg);border-left:2px solid var(--warn-line);
+  border-radius:0 6px 6px 0;padding:8px 12px;font-size:13.5px;line-height:1.6}
+.warn b{color:var(--warn);font-weight:700}
+.qgrid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line);
+  border-radius:7px;overflow:hidden}
+.qcell{background:var(--paper);padding:9px 11px}
+.qk{font-size:12px;color:var(--ink3)}
+.qv{font:600 16px/1.3 var(--mono);font-variant-numeric:tabular-nums;margin-top:2px}
+.rel-t{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:700;margin:14px 0 7px}
+.rel-t .sw{width:16px;height:2.5px;border-radius:2px}
+.rel{display:block;width:100%;text-align:left;border:1px solid var(--line);border-radius:7px;padding:8px 10px;
+  margin-bottom:5px;transition:.14s;background:var(--paper)}
+.rel:hover{border-color:var(--ink3);background:#FAF9F5}
+.rel .rn{font-size:14.5px;font-weight:620}
+.rel .rn i{font-style:normal;font:600 11.5px var(--mono);color:var(--ink3);margin-left:5px}
+.rel .rd{font-size:13px;color:var(--ink3);line-height:1.5;margin-top:2px}
+.conf{margin-left:6px;font-size:11px;font-weight:700;padding:1px 5px;border-radius:3px}
+.conf.disclosed{background:#E4F3EA;color:#0E6B3C}
+.conf.reported{background:#FDF0DC;color:#8A5A00}
+.conf.inferred{background:#FBE4EC;color:#96234B}
+.conf.common{background:#EDEBE4;color:#5A6070}
+.loadfail{margin:28px;background:var(--paper);border:1px solid var(--line2);border-left:3px solid var(--L8);
+  border-radius:10px;padding:20px 22px;font-size:15px;line-height:1.7;color:var(--ink2);max-width:66ch}
+.loadfail code{font:600 14px var(--mono);background:#F1EFE8;padding:2px 6px;border-radius:4px}
+@media(max-width:1000px){
+  .wrap{grid-template-columns:1fr;padding-left:16px;padding-right:16px}
+  .side{position:static;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px 10px;
+    background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:10px}
+  .side .s-t{display:none}
+  #layerlist{grid-column:1/-1;display:flex;gap:6px;overflow-x:auto;padding-bottom:3px;scrollbar-width:thin}
+  .chainhead{display:none}
+  .lrow{flex:0 0 auto;width:auto;white-space:nowrap;border-left:0;border-bottom:3px solid var(--c);padding:6px 10px}
+  .lrow .k{margin-left:6px}
+  #giants{grid-column:1;display:flex;gap:6px;overflow-x:auto;min-width:0;padding-bottom:3px}
+  .gbtn{display:inline-block;flex:0 0 auto;width:auto;margin:0;white-space:nowrap}
+  .reset{grid-column:2;grid-row:2;margin:0;width:auto;padding:6px 14px;align-self:start}
+  .s-note{display:none}
+  .panel{grid-column:1;position:relative;max-height:72vh}
+}
+
+/* ---------- 跑馬燈：最新查證 ----------
+   個股資料層層疊疊，看的人分不出哪些是新的。這一條只放「最近查證過的變動」，
+   每則都連到原始來源，點文字會跳到相關個股。資料在 data/updates.json。 */
+.ticker{max-width:1720px;margin:0 auto 16px;padding:0 28px;display:flex;align-items:stretch}
+.tk-head{flex:none;display:flex;align-items:center;gap:8px;padding:0 12px 0 14px;background:var(--ink);color:#fff;border-radius:9px 0 0 9px}
+.tk-label{font-size:13px;font-weight:700;letter-spacing:.08em}
+.tk-date{font:600 11.5px var(--mono);opacity:.72}
+.tk-toggle{font-size:11.5px;color:#fff;border:1px solid rgba(255,255,255,.35);border-radius:99px;padding:1px 9px}
+.tk-toggle:hover{border-color:#fff}
+.tk-viewport{flex:1;min-width:0;overflow:hidden;background:var(--paper);border:1px solid var(--line);border-left:0;border-radius:0 9px 9px 0;
+  -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 20px,#000 calc(100% - 36px),transparent);
+          mask-image:linear-gradient(90deg,transparent 0,#000 20px,#000 calc(100% - 36px),transparent)}
+.tk-track{display:flex;width:max-content;animation:tk-roll 60s linear infinite}
+.ticker:hover .tk-track,.ticker:focus-within .tk-track,.ticker.paused .tk-track{animation-play-state:paused}
+@keyframes tk-roll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.tk-list{display:flex;align-items:center;gap:28px;list-style:none;margin:0;padding:9px 28px 9px 18px}
+.tk-item{display:flex;align-items:center;gap:8px;white-space:nowrap}
+.tk-tag{font-size:11px;font-weight:700;padding:2px 6px;border-radius:4px;letter-spacing:.04em}
+.tk-new{background:var(--note-bg);color:var(--note)}
+.tk-fix{background:var(--warn-bg);color:var(--warn)}
+.tk-news{background:#EDEBE4;color:var(--ink2)}
+.tk-text{font-size:14px;color:var(--ink);padding:0;border-bottom:1px dashed transparent}
+.tk-text:hover{border-bottom-color:var(--ink3)}
+.tk-src{font-size:12.5px;color:var(--note);text-decoration:none;border-bottom:1px solid var(--note-line)}
+.tk-src:hover{color:var(--ink)}
+@media(prefers-reduced-motion:reduce){
+  .tk-track{animation:none}.tk-viewport{overflow-x:auto}
+  .tk-list[aria-hidden]{display:none}.tk-toggle{display:none}}
+@media(max-width:700px){.ticker{padding:0 16px}.tk-date{display:none}}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="kicker">堆疊爆炸圖 · 純台股</div>
+  <h1>台股 AI 供應鏈爆炸環</h1>
+  <p class="lede">十層做成十片浮在空中的圓盤，錢由上往下穿過整疊。<b>換成堆疊之後，每一層都拿到一樣大的圓周</b>，不會再發生資本源被擠在圓心、晶圓層卻塞不下二十七檔的問題。點左邊任一層，那片圓盤會浮出來並轉正面對你，這時候每一檔的名字都讀得到。</p>
+  <div class="stamp">行情更新 <b id="stamp">載入中</b> · 證交所、櫃買中心收盤資料 · 僅供研究，非投資建議</div>
+  <div class="switch"><a href="signals.html">市場訊號</a><a href="index.html">地層剖面</a><a href="rings.html" class="now" aria-current="page">爆炸環</a></div>
+</header>
+
+<section class="ticker" id="ticker" aria-label="最新查證的更新">
+  <div class="tk-head"><span class="tk-label">最新查證</span><span class="tk-date" id="tkDate"></span>
+    <button class="tk-toggle" id="tkToggle" aria-pressed="false">暫停</button></div>
+  <div class="tk-viewport"><div class="tk-track" id="tkTrack"></div></div>
+</section>
+
+
+<div class="wrap">
+  <nav class="side">
+    <div class="s-t">點層浮出並轉正</div>
+    <div id="layerlist"></div>
+    <button class="reset" id="reset">回到全景</button>
+    <div class="s-t">巨頭快捷</div>
+    <div id="giants"></div>
+    <div class="s-note" id="sidenote"></div>
+  </nav>
+  <main class="stage">
+    <svg id="viz" viewBox="0 0 1000 1400" role="img" aria-label="AI 供應鏈堆疊圓盤圖"></svg>
+    <div class="tip" id="tip"></div>
+    <div class="legend" id="legend"></div>
+  </main>
+  <aside class="panel" id="panel" role="region" aria-labelledby="pname" aria-hidden="true">
+    <div class="p-head">
+      <button class="p-close" id="pclose" aria-label="關閉詳情">&times;</button>
+      <div class="p-layer" id="player"></div>
+      <div class="p-name" id="pname"></div>
+      <div class="p-code" id="pcode"></div>
+      <div class="p-role" id="prole"></div>
+    </div>
+    <div class="p-body" id="pbody"></div>
+  </aside>
+</div>
+
+<script>
+const $=s=>document.querySelector(s);
+const NS='http://www.w3.org/2000/svg';
+const ETL={supply:'供應',alliance:'綁定',substitute:'替代',crowding:'排擠',equity:'持股',group:'同集團'};
+const ETORDER=['group','equity','alliance','supply','substitute','crowding'];
+const CONF={disclosed:'已揭露',reported:'媒體報導',inferred:'產業推測',common:'產業共識'};
+const GIANTS=[['NVDA','輝達'],['AMD','超微'],['AVGO','博通'],['HYNIX','SK 海力士'],
+              ['2330','台積電'],['2317','鴻海'],['COWOS','CoWoS'],['RACK','機櫃級系統']];
+
+/* 等角投影參數。TILT 是圓盤壓扁的比例，1 就是正圓 */
+const CX=470, TOP=150, RO=228, RI=118, THICK=15;
+const FLAT=0.34, FOCUS_TILT=0.92, GAP=104, LIFT=54;
+
+const S={chain:null,quotes:{},sel:null,iso:null,byCode:new Map(),geo:new Map(),edges:[]};
+
+
+/* 跑馬燈。複製一份接在後面做無縫循環，複製的那份對螢幕閱讀器隱藏、也不進鍵盤順序 */
+const TK_TAG={new:'新增',fix:'修正',news:'動態'};
+function renderTicker(u, go){
+  const box=document.getElementById('ticker');
+  if(!u||!u.items||!u.items.length){ box.hidden=true; return; }
+  const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const latest=u.items.map(i=>i.date).sort().pop();
+  document.getElementById('tkDate').textContent=latest.slice(5).replace('-','/')+' 查證';
+  const li=(i,dup)=>{ const off=dup?' tabindex="-1"':'';
+    return `<li class="tk-item"><span class="tk-tag tk-${esc(i.tag)}">${TK_TAG[i.tag]||esc(i.tag)}</span>`
+      +`<button class="tk-text"${off} data-go="${esc((i.codes||[])[0]||'')}">${esc(i.text)}</button>`
+      +`<a class="tk-src" href="${esc(i.url)}" target="_blank" rel="noopener noreferrer"${off}>${esc(i.source)}<span aria-hidden="true"> ↗</span></a></li>`; };
+  const list=dup=>`<ul class="tk-list"${dup?' aria-hidden="true"':''}>${u.items.map(i=>li(i,dup)).join('')}</ul>`;
+  const track=document.getElementById('tkTrack');
+  track.innerHTML=list(false)+list(true);
+  track.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{ if(b.dataset.go) go(b.dataset.go); });
+  // 速度固定每秒 36px：消息越多就跑越久，而不是越多跑越快
+  requestAnimationFrame(()=>{ track.style.animationDuration=Math.max(30,track.scrollWidth/2/36)+'s'; });
+  const t=document.getElementById('tkToggle');
+  t.onclick=()=>{ const p=box.classList.toggle('paused'); t.setAttribute('aria-pressed',p); t.textContent=p?'播放':'暫停'; };
+}
+
+function load(id,path){
+  const el=document.getElementById(id);
+  if(el) return Promise.resolve(JSON.parse(el.textContent));
+  // 加上時間戳，否則每天更新完報價，瀏覽器還是拿快取裡的舊數字
+  return fetch(`${path}?t=${Date.now()}`,{cache:'no-store'})
+    .then(r=>{ if(!r.ok) throw new Error(r.status); return r.json(); });
+}
+Promise.all([load('chain-data','data/chain.json'),
+             load('quotes-data','data/quotes.json').catch(()=>({quotes:{},updatedAt:'未更新'})),
+             load('updates-data','data/updates.json').catch(()=>null)])
+.then(([chain,q,upd])=>{
+  S.chain=chain; S.quotes=q.quotes||{};
+  $('#stamp').textContent=q.updatedAt||'未更新';
+  chain.layers.forEach(L=>L.groups.forEach(G=>G.nodes.forEach(n=>S.byCode.set(n.code,{n,L,G}))));
+  S.edges=chain.edges.filter(e=>S.byCode.has(e.from)&&S.byCode.has(e.to));
+  buildSide(); buildLegend(); draw();
+  renderTicker(upd, c=>{ if(S.byCode.has(c)) select(c); });
+}).catch(err=>{
+  document.querySelector('.stage').innerHTML=`<div class="loadfail"><b>資料載入失敗</b>
+    <p>讀不到 data/chain.json。這頁必須透過 http 開啟。</p>
+    <p>請先執行 <code>python3 scripts/serve.py 8099</code>，再開 http://localhost:8099/rings.html</p></div>`;
+});
+
+/* ---------- 每片圓盤的位置、傾角、半徑 ---------- */
+function discs(){
+  let y=TOP, out=[];
+  S.chain.layers.forEach((L,i)=>{
+    const focus = S.iso===L.id;
+    const tilt  = focus?FOCUS_TILT:FLAT;
+    const ro    = focus?RO+34:RO;
+    if(focus) y += LIFT;
+    out.push({L,i,cy:y+ro*tilt, ro, ri:focus?(RO+34)*0.5:RI, tilt, focus});
+    y += (focus? ro*tilt*2+LIFT : GAP);
+  });
+  return out;
+}
+const P=(d,r,a)=>{ const t=(a-90)*Math.PI/180;
+  return [CX+r*Math.cos(t), d.cy+r*Math.sin(t)*d.tilt]; };
+
+function sectorPath(d,r1,r2,a1,a2){
+  const big=(a2-a1)>180?1:0;
+  const [x1,y1]=P(d,r2,a1),[x2,y2]=P(d,r2,a2),[x3,y3]=P(d,r1,a2),[x4,y4]=P(d,r1,a1);
+  return `M${x1},${y1}A${r2},${r2*d.tilt} 0 ${big} 1 ${x2},${y2}`+
+         `L${x3},${y3}A${r1},${r1*d.tilt} 0 ${big} 0 ${x4},${y4}Z`;
+}
+/* 前半圈外緣往下擠出一道側牆，圓盤才有厚度 */
+function wallPath(d){
+  const [x1,y1]=P(d,d.ro,90),[x2,y2]=P(d,d.ro,270);
+  return `M${x1},${y1}A${d.ro},${d.ro*d.tilt} 0 0 1 ${x2},${y2}`+
+         `L${x2},${y2+THICK}A${d.ro},${d.ro*d.tilt} 0 0 0 ${x1},${y1+THICK}Z`;
+}
+
+function draw(){
+  const svg=$('#viz'); svg.innerHTML=''; S.geo.clear();
+  const add=(t,a,p)=>{const e=document.createElementNS(NS,t);
+    for(const k in a) e.setAttribute(k,a[k]); (p||svg).appendChild(e); return e;};
+  const D=discs();
+  const gWire=add('g',{id:'wires'});
+  const gTop=document.createElementNS(NS,'g');   // 名牌與衛星最後才掛上，才不會被圓盤蓋住
+
+  // 由下往上畫：畫面下方的圓盤離視線較遠，先畫，上面的圓盤才會正確蓋住它
+  [...D].reverse().forEach(d=>{
+    const g=add('g',{class:'disc'+(S.iso&&!d.focus?' dim':''),
+      'data-layer':d.L.id,style:`animation-delay:${d.i*0.55}s`});
+    // 落在下一片上的陰影，是最省成本的深度線索
+    add('ellipse',{cx:CX,cy:d.cy+THICK+7,rx:d.ro*0.98,ry:d.ro*d.tilt*0.98,
+      fill:'rgba(30,34,45,.07)',class:'shadow'},g);
+    add('path',{d:wallPath(d),fill:`color-mix(in srgb, var(--${d.L.id}) 55%, #4A4E5A)`,
+      opacity:.55,class:'wall'},g);
+
+    const nodes=d.L.groups.flatMap(G=>G.nodes.map(n=>({n,G})));
+    const gapDeg=d.L.groups.length>1?1.4:0;
+    const usable=360-gapDeg*d.L.groups.length, span=usable/(nodes.length||1);
+    let a=0;
+    d.L.groups.forEach(G=>{
+      G.nodes.forEach(nd=>{
+        const a1=a, a2=a+span-0.3;
+        const p=add('path',{d:sectorPath(d,d.ri,d.ro,a1,a2),fill:tint(nd,d.L),
+          stroke:'#fff','stroke-width':.7,class:'sector','data-code':nd.code,
+          tabindex:'0',role:'button','aria-label':`${nd.name} ${nd.code}`},g);
+        const mid=(a1+a2)/2;
+        S.geo.set(nd.code,{d,mid,r:(d.ri+d.ro)/2,el:p});
+        p.addEventListener('click',ev=>{ev.stopPropagation();select(nd.code);});
+        p.addEventListener('keydown',ev=>{if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();select(nd.code);}});
+        p.addEventListener('mouseenter',ev=>tip(ev,nd));
+        p.addEventListener('mousemove',tipMove);
+        p.addEventListener('mouseleave',()=>$('#tip').classList.remove('on'));
+        if(d.focus && span>3) radialLabel(nd,d,mid,add,g);
+        a+=span;
+      });
+      a+=gapDeg;
+    });
+
+    // 圓心標籤：只有轉正的那片放得下
+    if(d.focus){
+      add('ellipse',{cx:CX,cy:d.cy,rx:d.ri-6,ry:(d.ri-6)*d.tilt,fill:'#FCFBF8',
+        stroke:'var(--line2)','stroke-width':1},g);
+      add('text',{x:CX,y:d.cy-3,class:'hubt'},g).textContent=d.L.name;
+      add('text',{x:CX,y:d.cy+15,class:'hubs'},g).textContent=d.L.sub;
+    }
+    g.addEventListener('click',()=>toggleIso(d.L.id));
+    discLabel(d,add,gTop);
+  });
+
+  chainBrackets(D,add,gTop);
+  satellites(D,add,gTop);
+  svg.appendChild(gTop);
+  if(S.sel) paint(gWire);
+  document.querySelector('.stage').classList.toggle('floating',!S.sel&&!S.iso);
+  fit(svg);
+}
+
+function tint(nd,L){
+  if(nd.kind==='standard') return '#CFC7EC';
+  if(nd.kind==='segment')  return '#D6DEE4';
+  if(nd.ext)               return '#DAD7CF';
+  return `color-mix(in srgb, var(--${L.id}) ${Math.round((0.3+(nd.purity||1)*0.14)*100)}%, #fff)`;
+}
+
+/* 每片圓盤在左側掛一張名牌，用引線接到盤緣 */
+function discLabel(d,add,parent){
+  const [ex,ey]=P(d,d.ro,270-52);
+  const x=CX-d.ro-104, y=d.cy;
+  const tw=d.L.groups.flatMap(g=>g.nodes).filter(n=>!n.ext).length;
+  add('path',{d:`M${x+96},${y-4}L${ex},${ey}`,class:'lead'},parent);
+  add('text',{x:x+92,y:y-6,class:'dlabel','text-anchor':'end'},parent).textContent=d.L.name;
+  add('text',{x:x+92,y:y+11,class:'dsub','text-anchor':'end'},parent).textContent=
+    `${d.L.id}　${tw?tw+' 檔':'無台股'}`;
+}
+
+/* 需求鏈被硬體與基礎設施切成上下兩段，所以要抓「連續區段」而不是把同名的併成一條，
+   否則需求鏈的括號會從第一層一路拉到最後一層，看起來像整疊都是需求鏈 */
+function chainBrackets(D,add,parent){
+  const runs=[];
+  D.forEach(d=>{
+    const last=runs[runs.length-1];
+    if(last && last.chain===d.L.chain) last.ys.push(d.cy);
+    else runs.push({chain:d.L.chain, ys:[d.cy]});
+  });
+  const x=CX-RO-146;
+  runs.forEach(r=>{
+    const y1=Math.min(...r.ys)-18, y2=Math.max(...r.ys)+18, my=(y1+y2)/2;
+    add('path',{d:`M${x+8},${y1}L${x},${y1}L${x},${y2}L${x+8},${y2}`,class:'chainbar'},parent);
+    add('text',{x:x-9,y:my,class:'chainlbl','text-anchor':'middle',
+      transform:`rotate(-90 ${x-9} ${my})`},parent).textContent=S.chain.meta.chains[r.chain].label;
+  });
+}
+
+function radialLabel(nd,d,mid,add,parent){
+  const [x,y]=P(d,d.ro+13,mid);
+  const right=Math.cos((mid-90)*Math.PI/180)>=0;
+  const g=add('g',{},parent);
+  add('text',{x,y,class:'nodelbl','text-anchor':right?'start':'end','dominant-baseline':'middle'},g)
+    .textContent=nd.name;
+  if(!nd.ext) add('text',{x:x+(right?1:-1),y:y+12,class:'codelbl','text-anchor':right?'start':'end'},g)
+    .textContent=nd.code;
+}
+
+function satellites(D,add,parent){
+  const g=add('g',{},parent);
+  const x=CX+RO+128;
+  const step=Math.max(46,(D[D.length-1].cy-D[0].cy)/(GIANTS.length-1));
+  GIANTS.forEach(([code,label],i)=>{
+    if(!S.byCode.has(code)) return;
+    const y=D[0].cy+i*step;
+    const w=Math.max(84,label.length*15+24);
+    const sg=add('g',{class:'sat'+(S.sel===code?' on':''),tabindex:'0',role:'button',
+      'aria-label':`巨頭 ${label}`},g);
+    add('rect',{x:x-w/2,y:y-15,width:w,height:30,rx:15},sg);
+    add('text',{x,y:y+5,'text-anchor':'middle'},sg).textContent=label;
+    const geo=S.geo.get(code);
+    if(geo){ const [px,py]=P(geo.d,geo.r,geo.mid);
+      add('path',{d:`M${x-w/2-4},${y}C${x-w/2-60},${y} ${px+70},${py} ${px},${py}`,
+        class:'lead','stroke-dasharray':'3 4'},g); }
+    sg.addEventListener('click',()=>select(code));
+    sg.addEventListener('keydown',ev=>{if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();select(code);}});
+  });
+}
+
+function fit(svg){ const b=svg.getBBox(),p=22;
+  svg.setAttribute('viewBox',`${b.x-p} ${b.y-p} ${b.width+p*2} ${b.height+p*2}`); }
+
+/* ---------- 選取與連線 ---------- */
+function edgesOf(c){ return S.edges.filter(e=>e.from===c||e.to===c); }
+function toggleIso(id){
+  S.iso = S.iso===id?null:id;
+  document.querySelectorAll('[data-iso]').forEach(x=>x.classList.toggle('on',x.dataset.iso===S.iso));
+  draw(); syncNote();
+}
+function select(code){
+  if(S.sel===code){ clearSel(); return; }
+  S.sel=code; fillPanel(code);
+  $('#panel').classList.add('on'); $('#panel').setAttribute('aria-hidden','false');
+  document.body.classList.add('shift');
+  draw();
+  // 版面推開後尺寸才定案，這時候再把選中的扇形捲到看得到的位置
+  requestAnimationFrame(()=>{
+    const g=S.geo.get(code);
+    if(g&&g.el) g.el.scrollIntoView({behavior:'smooth',block:'center'});
+    $('#pclose').focus({preventScroll:true});
+  });
+}
+function clearSel(){
+  const was=S.sel; S.sel=null;
+  $('#panel').classList.remove('on'); $('#panel').setAttribute('aria-hidden','true');
+  document.body.classList.remove('shift');
+  draw();
+  const back=was&&S.geo.get(was); if(back&&back.el) back.el.focus({preventScroll:true});
+}
+function paint(gWire){
+  const es=edgesOf(S.sel), rel=new Set(es.map(e=>e.from===S.sel?e.to:e.from));
+  S.geo.forEach((g,c)=>{ if(c!==S.sel&&!rel.has(c)) g.el.classList.add('mute'); });
+  const a=S.geo.get(S.sel); if(!a) return;
+  const [ax,ay]=P(a.d,a.r,a.mid);
+  es.forEach(e=>{
+    const other=e.from===S.sel?e.to:e.from, b=S.geo.get(other); if(!b) return;
+    const [bx,by]=P(b.d,b.r,b.mid);
+    // 控制點往外側甩開，線才不會從圓盤中間穿過去
+    const side=(ax+bx)/2>CX?1:-1, bow=Math.min(210,60+Math.abs(by-ay)*0.5);
+    const p=document.createElementNS(NS,'path');
+    p.setAttribute('d',`M${ax},${ay}C${ax+side*bow},${ay} ${bx+side*bow},${by} ${bx},${by}`);
+    p.setAttribute('fill','none'); p.setAttribute('stroke',`var(--${e.type})`);
+    p.setAttribute('stroke-width','1.9'); p.setAttribute('opacity','.75');
+    p.setAttribute('stroke-linecap','round');
+    if(e.type==='substitute') p.setAttribute('stroke-dasharray','7 5');
+    if(e.type==='crowding')   p.setAttribute('stroke-dasharray','2 5');
+    if(e.type==='equity')     p.setAttribute('stroke-dasharray','10 3 2 3');
+    if(e.type==='group')      p.setAttribute('stroke-dasharray','3 3');
+    gWire.appendChild(p);
+    const dot=document.createElementNS(NS,'circle');
+    dot.setAttribute('cx',bx); dot.setAttribute('cy',by); dot.setAttribute('r',3.4);
+    dot.setAttribute('fill',`var(--${e.type})`); gWire.appendChild(dot);
+  });
+  a.el.setAttribute('stroke','var(--ink)'); a.el.setAttribute('stroke-width','2.4');
+}
+
+/* ---------- 提示 ---------- */
+function tip(ev,nd){
+  const q=S.quotes[nd.code], t=$('#tip');
+  const ch=q&&q.changePct!=null
+    ? `<span class="q">${q.close} <span style="color:${q.changePct>0?'#FF9A9A':q.changePct<0?'#8FE3B4':'#bbb'}">${q.changePct>0?'+':''}${q.changePct}%</span></span>`:'';
+  t.innerHTML=`<b>${nd.name}</b>${nd.ext?'':`<span class="c">${nd.code}</span>`}<span class="r">${nd.role||''}</span>${ch}`;
+  t.classList.add('on'); tipMove(ev);
+}
+function tipMove(ev){
+  const box=document.querySelector('.stage').getBoundingClientRect(), t=$('#tip');
+  let x=ev.clientX-box.left+16, y=ev.clientY-box.top+16;
+  if(x+270>box.width) x=ev.clientX-box.left-270;
+  t.style.left=x+'px'; t.style.top=y+'px';
+}
+
+/* ---------- 側欄 ---------- */
+function buildSide(){
+  const order=['demand','hardware','infra'], seen=new Set(); let h='';
+  order.forEach(ck=>{
+    const ls=S.chain.layers.filter(L=>L.chain===ck&&!seen.has(L.id));
+    ls.forEach(L=>seen.add(L.id));
+    h+=`<div class="chainhead">${S.chain.meta.chains[ck].label}</div>`+ls.map(L=>{
+      const k=L.groups.flatMap(g=>g.nodes).filter(n=>!n.ext).length;
+      return `<button class="lrow" data-iso="${L.id}" style="--c:var(--${L.id})">
+        <span class="n">${L.id}</span>${L.name}<span class="k">${k}</span></button>`;}).join('');
+  });
+  $('#layerlist').innerHTML=h;
+  $('#layerlist').querySelectorAll('[data-iso]').forEach(b=>b.onclick=()=>toggleIso(b.dataset.iso));
+  $('#giants').innerHTML=GIANTS.filter(([c])=>S.byCode.has(c))
+    .map(([c,l])=>`<button class="gbtn" data-g="${c}">${l}</button>`).join('');
+  $('#giants').querySelectorAll('[data-g]').forEach(b=>b.onclick=()=>select(b.dataset.g));
+  $('#reset').onclick=()=>{S.iso=null;
+    document.querySelectorAll('[data-iso]').forEach(x=>x.classList.remove('on'));
+    clearSel(); syncNote();};
+  syncNote();
+}
+function syncNote(){
+  $('#sidenote').textContent = S.iso
+    ? '這片已浮出並轉正，其餘壓回斜躺。再點一次收回。'
+    : '由上往下是錢的流向。堆疊之後每層圓周一樣大，內層不再被擠壓。';
+}
+function buildLegend(){
+  $('#legend').innerHTML=ETORDER.map(k=>`<span><i style="background:var(--${k})"></i>${ETL[k]}</span>`).join('')
+    +`<span style="margin-left:auto">扇形越深代表含金量越高，灰色為外部錨點或技術架構</span>`;
+}
+
+/* ---------- 詳情 ---------- */
+function fillPanel(code){
+  const {n,L,G}=S.byCode.get(code), q=S.quotes[code], R=S.chain.meta.rubric;
+  $('#panel').style.setProperty('--c',`var(--${L.id})`);
+  $('#player').textContent=`${L.id} ${L.name} · ${G.name}`;
+  $('#pname').textContent=n.name;
+  $('#pcode').textContent=n.kind==='standard'?'技術架構 · 不是可買的標的'
+    :n.kind==='segment'?'需求類型 · 不是單一買方'
+    :n.ext?'外部錨點 · 非台股':`${code} · ${q?q.symbol:''}`;
+  $('#prole').textContent=n.role||'';
+  let h='';
+  if(n.cross&&n.cross.length>1)
+    h+=`<div class="sect"><div class="sect-t">跨層分布</div><div class="mhint">營收實質落在 ${n.cross.join('、')} 共 ${n.cross.length} 層。跨越越多層，AI 題材被稀釋得越厲害。</div></div>`;
+  if(!n.ext&&n.purity)
+    h+=`<div class="sect"><div class="sect-t">三維度　主觀評分</div>
+      ${bar('含金量',n.purity,R.purity)}${bar('瓶頸度',n.bottleneck,R.bottleneck)}${bar('可替代性',n.subst,R.subst)}
+      <div class="mhint">含金量 ${n.purity} 是「${R.purity[n.purity]}」，瓶頸度 ${n.bottleneck} 是「${R.bottleneck[n.bottleneck]}」，可替代性 ${n.subst} 是「${R.subst[n.subst]}」。</div>
+      <span class="warn"><b>注意方向</b>：可替代性數字越大代表越容易被換掉，跟另外兩項相反。</span></div>`;
+  if(q)
+    h+=`<div class="sect"><div class="sect-t">行情與財務</div><div class="qgrid">
+      ${cell('收盤 '+(q.currency||'TWD'),q.close)}${cell('漲跌',q.changePct==null?'—':(q.changePct>0?'+':'')+q.changePct+'%')}
+      ${cell('近四季本益比',q.perTtm??'—')}${cell('殖利率',q.yieldPct==null?'—':q.yieldPct+'%')}
+      ${cell('毛利率',q.grossPct==null?'—':q.grossPct+'%')}${cell('營益率',q.opPct==null?'—':q.opPct+'%')}
+      ${cell('半年位階',q.pos6m==null?'—':q.pos6m+'%')}${cell('資料日',q.asOf||'—')}</div></div>`;
+  const es=edgesOf(code);
+  h+=`<div class="sect"><div class="sect-t">關聯鏈路 ${es.length} 條</div>`;
+  ETORDER.forEach(t=>{
+    const g=es.filter(e=>e.type===t); if(!g.length) return;
+    h+=`<div class="rel-t"><span class="sw" style="background:var(--${t})"></span>${ETL[t]} ${g.length}</div>`;
+    g.forEach(e=>{
+      const other=e.from===code?e.to:e.from, o=S.byCode.get(other).n;
+      h+=`<button class="rel" data-go="${other}"><div class="rn">${o.name}${o.ext?'':`<i>${other}</i>`}<span class="conf ${e.conf||'common'}">${CONF[e.conf||'common']}</span></div><div class="rd">${e.note||''}</div></button>`;
+    });
+  });
+  $('#pbody').innerHTML=(h+'</div>').replace(/([\s\S])\n\s+/g,(m,p)=>/[一-鿿　-〿！-｠>]/.test(p)?p:p+' ');
+  $('#pbody').querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>select(b.dataset.go));
+}
+const bar=(name,v,r)=>`<div class="metric" title="${r?[1,2,3,4,5].map(i=>i+'='+r[i]).join('　'):''}">
+  <span class="mn">${name}</span><span class="track"><span class="fill" style="width:${(v||0)*20}%"></span></span>
+  <span class="mv">${v||'—'}</span></div>`;
+const cell=(k,v)=>`<div class="qcell"><div class="qk">${k}</div><div class="qv">${v}</div></div>`;
+
+$('#pclose').onclick=clearSel;
+addEventListener('keydown',e=>{ if(e.key!=='Escape') return;
+  if(S.sel) clearSel(); else if(S.iso) toggleIso(S.iso); });
+</script>
+</body>
+</html>

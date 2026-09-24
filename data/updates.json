@@ -1,0 +1,17 @@
+{
+  "note": "跑馬燈資料。每一筆都要有可點的原始來源，text 用自己的話寫，不照抄標題。tag 只有三種：new 新增、fix 修正、news 動態。codes 是相關個股，點文字會跳到那一檔。",
+  "items": [
+    {"date": "2026-09-24", "tag": "fix",  "text": "世芯是 Amazon Trainium 主力夥伴，原本誤標為 Meta", "source": "工商時報", "url": "https://www.ctee.com.tw/news/20251202700655-430201", "codes": ["3661"]},
+    {"date": "2026-09-24", "tag": "fix",  "text": "訊芯的 CPO 合作對象是博通，原本誤標為輝達", "source": "鉅亨網", "url": "https://news.cnyes.com/news/id/6246994", "codes": ["6451"]},
+    {"date": "2026-09-24", "tag": "fix",  "text": "輝達持股改標已揭露，依據是它自己的 13F 申報", "source": "Investing.com", "url": "https://www.investing.com/analysis/a-deep-dive-into-nvidias-latest-portfolio-moves-200680639", "codes": ["NVDA"]},
+    {"date": "2026-09-24", "tag": "news", "text": "台積電證實 2027 年 7 月底前退出 GaN 代工", "source": "聯合新聞網", "url": "https://udn.com/news/story/7240/9775975", "codes": ["2330"]},
+    {"date": "2026-09-24", "tag": "news", "text": "納微 GaN 轉由力積電代工，100V 產品 2026 上半年量產", "source": "鉅亨網", "url": "https://news.cnyes.com/news/id/6047250", "codes": ["6770"]},
+    {"date": "2026-09-24", "tag": "news", "text": "世界先進取得台積電 GaN 授權，2028 上半年量產", "source": "Yahoo 股市", "url": "https://tw.stock.yahoo.com/news/%E4%B8%96%E7%95%8C%E5%85%88%E9%80%B2%E5%AE%A3%E5%B8%83%E8%88%87%E5%8F%B0%E7%A9%8D%E9%9B%BB%E7%B0%BD%E6%B0%AE%E5%8C%96%E9%8E%B5%E8%A3%BD%E7%A8%8B%E6%8E%88%E6%AC%8A-2028%E5%B9%B4%E4%B8%8A%E5%8D%8A%E5%B9%B4%E9%87%8F%E7%94%A2-065144815.html", "codes": ["5347"]},
+    {"date": "2026-09-24", "tag": "new",  "text": "800V 架構帶動碳化矽，補上漢磊（代工）與嘉晶（磊晶）", "source": "聯合新聞網", "url": "https://udn.com/news/story/7240/9695341", "codes": ["3707", "3016"]},
+    {"date": "2026-09-24", "tag": "news", "text": "800V 曾傳延後至 2028，供應鏈稱產品布局不變", "source": "科技新報", "url": "https://technews.tw/2026/06/10/800v-hvdc-is-going-to-be-postpone/", "codes": ["2308"]},
+    {"date": "2026-09-24", "tag": "news", "text": "台達電 800V 預計 2027 第一季小量、第二季放量", "source": "鏈新聞", "url": "https://abmedia.io/nvidia-800v-hvdc-delta-2027-q1-production", "codes": ["2308"]},
+    {"date": "2026-09-24", "tag": "new",  "text": "環球晶法說：產線接近滿載，下半年啟動漲價", "source": "富果", "url": "https://blog.fugle.tw/post/earnings-call-6488-2026-08-04", "codes": ["6488"]},
+    {"date": "2026-09-24", "tag": "new",  "text": "補上合晶，經營者為焦平海，查無中美晶持股公告故不列同集團", "source": "MoneyDJ", "url": "https://www.moneydj.com/kmdj/news/newsviewer.aspx?a=2c402661-d8f4-4c55-8af4-d787f3232595", "codes": ["6182"]},
+    {"date": "2026-09-24", "tag": "new",  "text": "創意與緯穎宣布策略技術合作", "source": "創意電子新聞稿", "url": "https://www.guc-asic.com/tw/news/PressRelease/PR_20260504", "codes": ["3443", "6669"]}
+  ]
+}
