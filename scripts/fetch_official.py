@@ -11,6 +11,10 @@
   毛利、營益　兩邊的「營益分析」，是最新一季財報，不是近四季
   市值　　　　已發行股數 × 收盤價
   預估本益比　官方不發布（那是分析師預估），固定留空
+  月營收年增　兩邊的「每月營業收入彙總表」。以近三個月累計年增為主，單月為輔：
+              單月很容易被去年基期低或一次性大單拉高。每次抓到當月、上月、去年同月
+              三個數字存進 data/revenue.json，前兩個月由 backfill_revenue.py 一次補齊，
+              之後每月自己接得上
   半年位階、月線　官方沒有現成欄位，靠 data/history.json 每天累積收盤自己算。
               歷史存原始收盤，計算時用官方除權息表「還原權值」：事件之前的價格乘上
               參考價÷除權息前收盤價。不還原的話，分割或配股會被當成暴跌，
@@ -113,6 +117,35 @@ def adjusted(seq, events):
     return res
 
 
+REV_KEEP = 27            # 保留兩年多，夠算近三個月與去年同期
+
+
+def month_shift(ym, k):
+    """'2026-08' 往前或往後移 k 個月。"""
+    y, m = int(ym[:4]), int(ym[5:])
+    n = y * 12 + (m - 1) + k
+    return f"{n // 12}-{n % 12 + 1:02d}"
+
+
+def roc_month(s):
+    """月營收的資料年月 11508 轉成 2026-08。"""
+    s = str(s).strip()
+    return f"{int(s[:-2]) + 1911}-{s[-2:]}"
+
+
+def revenue_yoy(seq, latest):
+    """近三個月累計年增與單月年增。缺任何一個月、或去年是零或負數，就不算。"""
+    need = [month_shift(latest, -k) for k in range(3)]
+    prev = [month_shift(m, -12) for m in need]
+    one = None
+    if seq.get(latest) is not None and (seq.get(prev[0]) or 0) > 0:
+        one = round((seq[latest] / seq[prev[0]] - 1) * 100, 1)
+    three = None
+    if all(seq.get(m) is not None for m in need) and all((seq.get(m) or 0) > 0 for m in prev):
+        three = round((sum(seq[m] for m in need) / sum(seq[m] for m in prev) - 1) * 100, 1)
+    return one, three
+
+
 def company_codes():
     chain = json.loads((DATA / "chain.json").read_text(encoding="utf-8"))
     return sorted({n["code"] for L in chain["layers"] for G in L["groups"] for n in G["nodes"]
@@ -176,6 +209,28 @@ def main():
     for r in get("https://www.tpex.org.tw/openapi/v1/mopsfin_t187ap03_O"):
         shares[r["SecuritiesCompanyCode"]] = num(r.get("IssueShares"))
 
+    # ── 月營收：當月、上月、去年同月，累積進 revenue.json ─────
+    rp = DATA / "revenue.json"
+    rev = json.loads(rp.read_text(encoding="utf-8")) if rp.exists() else {}
+    rev_latest, rev_official = {}, {}
+    for url in ("https://openapi.twse.com.tw/v1/opendata/t187ap05_L",
+                "https://www.tpex.org.tw/openapi/v1/mopsfin_t187ap05_O"):
+        for r in get(url):
+            c = r.get("公司代號")
+            if c not in codes:
+                continue
+            m = roc_month(r["資料年月"])
+            seq = rev.setdefault(c, {})
+            for when, key in ((m, "營業收入-當月營收"), (month_shift(m, -1), "營業收入-上月營收"),
+                              (month_shift(m, -12), "營業收入-去年當月營收")):
+                v = num(r.get(key))
+                if v is not None:
+                    seq[when] = v
+            rev_latest[c] = m
+            rev_official[c] = num(r.get("營業收入-去年同月增減(%)"))
+    for c in rev:
+        rev[c] = dict(sorted(rev[c].items())[-REV_KEEP:])
+
     # ── 歷史收盤：每天累積，用來算半年位階與月線 ─────────────
     hp = DATA / "history.json"
     hist = json.loads(hp.read_text(encoding="utf-8")) if hp.exists() else {}
@@ -191,7 +246,7 @@ def main():
     if events:
         print(f"除權息事件 {sum(len(v) for v in events.values())} 筆，涵蓋 {len(events)} 檔")
 
-    quotes, failed, gapped = {}, sorted(codes - set(rows)), []
+    quotes, failed, gapped, mismatch = {}, sorted(codes - set(rows)), [], []
     for c, r in sorted(rows.items()):
         close, chg = r["close"], r["change"]
         if close is None:
@@ -235,19 +290,42 @@ def main():
         }
         if note:
             quotes[c]["note"] = note
+        m = rev_latest.get(c)
+        if m:
+            one, three = revenue_yoy(rev.get(c, {}), m)
+            off = rev_official.get(c)
+            # 自己算的單月年增要跟官方公布的一致，不一致代表存的資料錯位，寧可不顯示
+            if one is not None and off is not None and abs(one - off) > 0.5:
+                mismatch.append(c)
+                one = three = None
+            quotes[c].update(revMonth=m, revYoy=one, revYoy3m=three)
 
     if failed:
         print(f"⚠ {len(failed)} 檔沒有抓到：{failed}")
     if gapped:
         print(f"⚠ {len(gapped)} 檔還原後仍有異常斷點，半年位階與月線留白：{gapped}")
+    if mismatch:
+        print(f"⚠ {len(mismatch)} 檔自算營收年增與官方不一致，營收欄位留白：{mismatch}")
+    n3 = sum(1 for q in quotes.values() if q.get("revYoy3m") is not None)
+    print(f"月營收：{len(rev_latest)} 檔有資料，{n3} 檔算得出近三個月累計年增")
     if not quotes:
         sys.exit("一檔都沒抓到，中止，不覆寫 quotes.json")
 
+    # 休市日重跑拿到的是同一天的資料。只有抓取時間不同就重寫，雲端每天都會多一筆沒意義的提交
+    qp = DATA / "quotes.json"
+    if qp.exists():
+        old = json.loads(qp.read_text(encoding="utf-8"))
+        if old.get("quotes") == quotes and old.get("failed") == failed:
+            hp.write_text(json.dumps(hist, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+            rp.write_text(json.dumps(rev, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+            print(f"報價與 {day} 相同（休市或尚未收盤），不重寫 quotes.json")
+            return
     out = {"updatedAt": datetime.now(TPE).strftime("%Y-%m-%d %H:%M"),
            "source": "臺灣證券交易所、證券櫃檯買賣中心開放資料",
            "quotes": quotes, "failed": failed}
     (DATA / "quotes.json").write_text(json.dumps(out, ensure_ascii=False, indent=1), encoding="utf-8")
     hp.write_text(json.dumps(hist, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+    rp.write_text(json.dumps(rev, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     print(f"成功 {len(quotes)} 檔，失敗 {len(failed)} 檔，已寫入 quotes.json 與 history.json")
 
 

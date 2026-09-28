@@ -645,6 +645,7 @@ function fillPanel(code){
     const stale = q.asOf ? Math.round((Date.now()-new Date(q.asOf+'T00:00:00+08:00'))/864e5) : null;
     h+=`<div class="sect"><div class="sect-t">行情與財務</div><div class="qgrid">
       ${cell('收盤 '+(q.currency||'TWD'),q.close)}${cell('漲跌',q.changePct==null?'—':(q.changePct>0?'+':'')+q.changePct+'%')}
+      ${cell('營收年增 近三月',q.revYoy3m==null?'—':(q.revYoy3m>0?'+':'')+q.revYoy3m+'%')}${cell('單月'+(q.revMonth?'（'+(+q.revMonth.slice(5))+'月）':''),q.revYoy==null?'—':(q.revYoy>0?'+':'')+q.revYoy+'%')}
       ${cell('近四季本益比',q.perTtm??'—')}${cell('殖利率',q.yieldPct==null?'—':q.yieldPct+'%')}
       ${cell('毛利率'+(q.finPeriod?' '+q.finPeriod:''),q.grossPct==null?'—':q.grossPct+'%')}${cell('營益率',q.opPct==null?'—':q.opPct+'%')}
       ${cell('股價淨值比',q.pbr??'—')}${cell('市值(億)',q.mktcapB==null?'—':q.mktcapB.toLocaleString('en-US'))}
@@ -652,7 +653,8 @@ function fillPanel(code){
     </div>
     ${q.note?`<span class="warn"><b>暫不顯示</b>：${q.note}。</span>`:''}
     ${stale!=null&&stale>4?`<span class="warn"><b>報價可能已過期</b>：收盤為 ${q.asOf}，距今 ${stale} 天。重跑 scripts/fetch_official.py 更新。</span>`:''}
-    <div class="mhint meta">本益比用近四季獲利計算，<b>虧損公司不計，所以會是空白</b>。
+    <div class="mhint meta">營收年增以<b>近三個月累計</b>為主：單月很容易被去年基期偏低或一次性大單拉高。記憶體股年增五六倍是缺貨漲價加上去年低基期，是真的，但不會一直維持。
+      本益比用近四季獲利計算，<b>虧損公司不計，所以會是空白</b>。
       半年位階是收盤價在近六個月高低區間的相對位置，100 代表在半年最高點，<b>價格已還原除權息</b>，分割或配息不會被當成下跌。
       毛利率與營益率是最新一季財報，不是近四季。以上數字全部來自證交所與櫃買中心的官方開放資料。</div></div>`;
   }

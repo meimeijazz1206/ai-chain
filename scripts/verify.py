@@ -19,7 +19,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 TODAY = dt.date.today()
 STALE_DAYS = 90          # 關聯線超過這個天數沒複查就列入待辦
-QUOTE_STALE_DAYS = 5     # 收盤日距今超過這麼多天就是抓取出問題
+QUOTE_STALE_DAYS = 12    # 收盤日距今超過這麼多天就是抓取出問題。
+                         # 不能設太短：春節休市常連續六到九天，設 5 天會在過年期間擋掉所有發布
 MOVE_ALERT = 15.0        # 單日漲跌超過這個百分比，值得人看一眼
 
 errors, warns = [], []
@@ -157,6 +158,22 @@ def check_updates(nodes):
                 E(f"{where} 指向不存在的代號 {c}")
 
 
+def check_revenue(nodes, quotes):
+    """月營收每月 10 日前公布。最新月份落後超過兩個月，代表營收沒有在更新。
+    幅度大不警告：記憶體股年增六倍是真的，天天警告只會讓人習慣忽略警告。"""
+    qs = quotes.get("quotes", {})
+    companies = [c for c, (n, _, _) in nodes.items() if n.get("kind") == "company" and not n.get("ext")]
+    have = [c for c in companies if qs.get(c, {}).get("revYoy3m") is not None]
+    if companies and len(have) / len(companies) < 0.9:
+        W(f"只有 {len(have)}／{len(companies)} 檔算得出近三個月營收年增，檢查 revenue.json 是否缺月份")
+    months = sorted({qs[c]["revMonth"] for c in companies if qs.get(c, {}).get("revMonth")})
+    if months:
+        y, m = map(int, months[-1].split("-"))
+        lag = (TODAY.year * 12 + TODAY.month) - (y * 12 + m)
+        if lag > 2:
+            W(f"月營收最新月份停在 {months[-1]}，已落後 {lag} 個月，官方資料可能沒有抓到")
+
+
 def aging(chain, rotate):
     rows = []
     for e in chain["edges"]:
@@ -190,6 +207,7 @@ def main():
         check_quotes(nodes, quotes)
         check_products(nodes)
         check_updates(nodes)
+        check_revenue(nodes, quotes)
         aging(chain, a.rotate)
 
     print(f"\n檢查於 {TODAY}")
