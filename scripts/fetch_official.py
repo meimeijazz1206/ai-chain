@@ -267,6 +267,7 @@ def main():
             above = close > sum(closes[-MA_DAYS:]) / MA_DAYS
         pe, pb, yd = val.get(c, (None, None, None))
         gm, om, period = margin.get(c, (None, None, None))
+        sh = shares.get(c)
         # 最近一季財報之後股本大幅變動（分割、大量配股），官方的每股盈餘與每股股利
         # 還是舊股數，本益比與殖利率會錯好幾倍。例如緯穎 2026-09-02 一拆三後，
         # 官方本益比顯示 6.78 倍、殖利率 7.76%，實際約是三分之一與三倍。等下一季財報再恢復
@@ -276,9 +277,10 @@ def main():
             qend = f"{y}-{q * 3:02d}-{[31, 30, 30, 31][q - 1]}"
             big = [w for w, fac in events.get(c, []) if w > qend and fac < 0.8]
             if big:
-                pe = yd = None
-                note = f"{big[-1]} 股本大幅變動（分割或配股）後，官方本益比與殖利率尚未換算，暫不顯示"
-        sh = shares.get(c)
+                # 官方的已發行股數也還是變動前的數字（緯穎分割後仍是 1.86 億股，實際約 5.6 億股），
+                # 市值會少算好幾倍，跟本益比、殖利率一起留白
+                pe = yd = sh = None
+                note = f"{big[-1]} 股本大幅變動（分割或配股）後，官方本益比、殖利率與股數尚未換算，暫不顯示，市值也因此留白"
         quotes[c] = {
             "symbol": c + r["mkt"], "close": close,
             "changePct": round(chg / prev * 100, 2) if prev else None,
