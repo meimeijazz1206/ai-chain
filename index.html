@@ -274,6 +274,7 @@ footer code{font:600 13px var(--mono);background:#EFEDE6;padding:2px 6px;border-
       <button class="chip" data-f="purity">含金量 4 以上</button>
       <button class="chip" data-f="bottleneck">瓶頸環節 4 以上</button>
       <button class="chip" data-f="cross">跨層公司</button>
+      <button class="chip" data-f="growth" title="以近三個月累計營收年增排序，取最快的五分之一">營收成長前 20%</button>
       <button class="chip" data-f="all">全部展開</button>
     </div>
   </div>
@@ -699,10 +700,17 @@ document.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{
   if(f==='all'){ const anyClosed=[...document.querySelectorAll('.layer')].some(e=>!e.classList.contains('open'));
     document.querySelectorAll('.layer').forEach(e=>e.classList.toggle('open',anyClosed)); redraw(); return; }
   b.classList.toggle('on'); S.filter=b.classList.contains('on')?f:null;
+  // 門檻用排名而不是固定數字：AI 熱潮時年增 30% 以上就占六成，固定門檻會亮掉大半張地圖
+  if(S.filter==='growth'){
+    const v=[...byCode.entries()].filter(([c,x])=>x.n.kind==='company'&&S.quotes[c]?.revYoy3m!=null)
+      .map(([c])=>S.quotes[c].revYoy3m).sort((a,b)=>a-b);
+    S.growthCut=v.length?v[Math.floor(v.length*0.8)]:Infinity;
+  }
   document.querySelectorAll('.layer').forEach(e=>e.classList.toggle('open',!!S.filter));
   elByCode.forEach((el,c)=>{ const n=byCode.get(c).n;
-    const fail = S.filter==='cross' ? !(n.cross && n.cross.length>1)
-                                    : (!n.ext && (n[S.filter]||0)<4);
+    const fail = S.filter==='cross'  ? !(n.cross && n.cross.length>1)
+               : S.filter==='growth' ? !((S.quotes[c]?.revYoy3m ?? -Infinity) >= S.growthCut)
+               :                       (!n.ext && (n[S.filter]||0)<4);
     el.classList.toggle('mute', !!S.filter && fail);
   });
   redraw(); updateCount();
@@ -722,7 +730,8 @@ function updateCount(query){
   const all=[...byCode.entries()].filter(([c])=>byCode.get(c).n.kind==='company');
   const shown=all.filter(([c])=>!elByCode.get(c).classList.contains('mute'));
   const active = !!S.filter || !!S.sel || !!S.theme || !!(query&&query.length);
-  const label = document.querySelector('[data-f].on')?.textContent
+  const label = (S.filter==='growth' ? `營收成長前 20%（近三月年增 ${S.growthCut}% 以上）` : '')
+             || document.querySelector('[data-f].on')?.textContent
              || (S.theme && S.chain.themes.find(t=>t.id===S.theme)?.name)
              || (S.sel && `${byCode.get(S.sel).n.name} 的關聯`)
              || (query ? `搜尋「${query}」` : '');
