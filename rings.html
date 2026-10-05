@@ -202,6 +202,30 @@ svg#viz{display:block;width:100%;height:auto}
   .tk-track{animation:none}.tk-viewport{overflow-x:auto}
   .tk-list[aria-hidden]{display:none}.tk-toggle{display:none}}
 @media(max-width:700px){.ticker{padding:0 16px}.tk-date{display:none}}
+
+/* ---------- 錄影示範模式（網址加 ?demo） ----------
+   給社群影片用：收掉側欄、面板與跑馬燈，只留圓盤，畫面下方用大字幕講解。
+   看影片的人多半在手機上、靜音播放，所以字幕要大，說明不能靠旁白。 */
+html.demo,html.demo *{cursor:none!important}
+html.demo .lede,html.demo .stamp,html.demo .switch,html.demo .ticker,html.demo .snapshot,
+html.demo .side,html.demo .panel,html.demo .legend,html.demo .tip{display:none!important}
+html.demo header.top{padding:22px 18px 4px;text-align:center}
+html.demo h1{font-size:clamp(24px,6vw,36px);margin:6px 0 0}
+html.demo .kicker{font-size:clamp(12px,3vw,14px)}
+html.demo .wrap,html.demo body.shift .wrap{grid-template-columns:1fr!important;max-width:none;padding:4px 6px 30vh}
+html.demo .stage{border:0;background:transparent;box-shadow:none}
+.demo-cap{position:fixed;left:50%;bottom:4vh;transform:translate(-50%,8px);width:min(92vw,720px);z-index:50;
+  background:rgba(22,24,29,.9);color:#fff;border-radius:16px;padding:14px 18px 15px;text-align:center;
+  font-size:clamp(17px,4.6vw,26px);line-height:1.45;font-weight:650;letter-spacing:.01em;
+  opacity:0;transition:opacity .35s,transform .35s}
+.demo-cap.on{opacity:1;transform:translate(-50%,0)}
+.demo-cap .n{display:inline-block;font:600 .62em/1 var(--mono);background:rgba(255,255,255,.16);
+  border-radius:99px;padding:5px 9px;margin-bottom:8px;letter-spacing:.06em}
+.demo-cap div{text-wrap:balance}
+.demo-cap small{display:block;text-wrap:balance;font-size:.66em;font-weight:500;opacity:.78;margin-top:5px;line-height:1.5}
+.demo-tap{position:fixed;width:54px;height:54px;margin:-27px 0 0 -27px;border-radius:50%;z-index:60;pointer-events:none;
+  border:3px solid #fff;box-shadow:0 0 0 3px rgba(22,24,29,.6),0 6px 18px rgba(0,0,0,.25);animation:demo-tap .75s ease-out forwards}
+@keyframes demo-tap{0%{transform:scale(.35);opacity:0}25%{opacity:1}100%{transform:scale(1.45);opacity:0}}
 </style>
 </head>
 <body>
@@ -613,6 +637,77 @@ const cell=(k,v)=>`<div class="qcell"><div class="qk">${k}</div><div class="qv">
 $('#pclose').onclick=clearSel;
 addEventListener('keydown',e=>{ if(e.key!=='Escape') return;
   if(S.sel) clearSel(); else if(S.iso) toggleIso(S.iso); });
+
+/* ---------- 錄影示範模式 ----------
+   網址加 ?demo，頁面載入後按空白鍵開始，照劇本自動操作，結束後停在最後一張字幕。
+   再按一次空白鍵會從頭重播。劇本固定，重錄幾次都一樣。 */
+const DEMO = new URLSearchParams(location.search).has('demo');
+if (DEMO) document.documentElement.classList.add('demo');
+let demoBusy = false;
+const wait = ms => new Promise(r => setTimeout(r, ms));
+function demoCap(n, text, sub){
+  let el = document.getElementById('demoCap');
+  if (!el){ el = document.createElement('div'); el.id = 'demoCap'; el.className = 'demo-cap';
+    el.setAttribute('aria-live', 'polite'); document.body.appendChild(el); }
+  el.classList.remove('on');
+  setTimeout(() => { el.innerHTML = `<span class="n">${n}</span><div>${text}</div>${sub ? `<small>${sub}</small>` : ''}`;
+    el.classList.add('on'); }, 200);
+}
+function demoTap(el){
+  if (!el) return;
+  const r = el.getBoundingClientRect(), d = document.createElement('div');
+  d.className = 'demo-tap'; d.style.left = (r.left + r.width / 2) + 'px'; d.style.top = (r.top + r.height / 2) + 'px';
+  document.body.appendChild(d); setTimeout(() => d.remove(), 800);
+}
+const demoView = el => el && el.scrollIntoView({behavior: 'smooth', block: 'center'});
+const demoDisc = id => document.querySelector(`.disc[data-layer="${id}"]`);
+const demoSector = code => S.geo.get(code)?.el;
+const demoGiant = name => [...document.querySelectorAll('.sat')].find(g => g.textContent.trim() === name);
+
+async function demoRun(){
+  demoBusy = true;
+  if (S.sel) clearSel();
+  if (S.iso) toggleIso(S.iso);
+  window.scrollTo({top: 0});
+  await wait(300);
+
+  demoCap('1 / 6', '台股 AI 供應鏈，十層依「錢的流向」由上往下疊', '每一片圓盤是一層，每一格扇形是一家公司');
+  await wait(4600);
+
+  demoView(demoDisc('L3')); await wait(900);
+  demoCap('2 / 6', '點一層，那片圓盤會浮出來、轉正面對你', '晶圓製造與先進封裝，三十多家一次攤開');
+  demoTap(demoDisc('L3')); await wait(260);
+  toggleIso('L3'); await wait(380); demoView(demoDisc('L3'));
+  await wait(4800);
+
+  demoCap('3 / 6', '點台積電，線會連到它的上下游', '線的顏色代表關係：供應、綁定、替代、持股、同集團');
+  demoTap(demoSector('2330')); await wait(260);
+  select('2330'); await wait(420); demoView(demoSector('2330'));
+  await wait(5200);
+
+  clearSel(); toggleIso('L3'); window.scrollTo({top: 0, behavior: 'smooth'}); await wait(900);
+  demoCap('4 / 6', '外圍是巨頭。點輝達，看它的觸角橫跨幾層', '一家公司牽動整條鏈，平面清單看不出來');
+  demoView(demoGiant('輝達')); await wait(700);
+  demoTap(demoGiant('輝達')); await wait(260);
+  select('NVDA');
+  await wait(5600);
+
+  clearSel(); await wait(400);
+  demoCap('5 / 6', '技術也是節點：CPO 共同封裝光學', '連到聯亞、上詮、訊芯，每家卡在哪一格一目了然');
+  demoView(demoSector('CPO')); await wait(700);
+  demoTap(demoSector('CPO')); await wait(260);
+  select('CPO'); await wait(420); demoView(demoSector('CPO'));
+  await wait(5400);
+
+  clearSel(); window.scrollTo({top: 0, behavior: 'smooth'});
+  demoCap('6 / 6', '每個交易日收盤後自動更新', 'meimeijazz1206.github.io/ai-chain');
+  demoBusy = false;
+}
+addEventListener('keydown', e => {
+  if (!DEMO || e.code !== 'Space') return;
+  e.preventDefault();
+  if (!demoBusy && S.chain) demoRun();
+});
 </script>
 </body>
 </html>

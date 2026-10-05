@@ -691,7 +691,6 @@
     {"from": "COUPE", "to": "CPO", "type": "alliance", "note": "COUPE 是台積電實作 CPO 架構的平台", "conf": "common", "checked": "2026-09-16"},
     {"from": "CPO", "to": "6451", "type": "supply", "note": "光引擎的 SiP 先進封裝", "conf": "reported", "checked": "2026-09-16"},
     {"from": "CPO", "to": "3363", "type": "supply", "note": "光學被動元件與耦合", "conf": "common", "checked": "2026-09-16"},
-    {"from": "CPO", "to": "3081", "type": "supply", "note": "磊晶與雷射晶粒", "conf": "common", "checked": "2026-09-16"},
     {"from": "CPO", "to": "6223", "type": "supply", "note": "光電混合檢測，量產的真瓶頸", "conf": "reported", "checked": "2026-09-16"},
     {"from": "CPO", "to": "2345", "type": "supply", "note": "交換器導入 CPO 後的整機設計", "conf": "common", "checked": "2026-09-16"},
     {"from": "CPO", "to": "5347", "type": "supply", "note": "光子晶片 PIC 用成熟製程節點", "conf": "common", "checked": "2026-09-16"},

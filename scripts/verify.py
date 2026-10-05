@@ -77,6 +77,16 @@ def check_chain(chain):
         if e.get("conf") and e["conf"] not in confs:
             E(f"未知的可信度 {e['conf']}：{e['from']} → {e['to']}")
 
+    # 同一對節點、同一種關係只能有一條。方向相反也算重複，
+    # 曾經同時存在「CPO → 聯亞」與「聯亞 → CPO」兩條供應線，面板會把聯亞列兩次
+    seen = {}
+    for e in chain["edges"]:
+        key = (frozenset((e["from"], e["to"])), e["type"])
+        if key in seen:
+            E(f"重複的關聯線：{e['from']} 與 {e['to']} 的「{e['type']}」出現兩次（另一條：{seen[key]}）")
+        else:
+            seen[key] = e.get("note", "")[:20]
+
     for t in chain.get("themes", []):
         miss = [c for c in t["codes"] if c not in nodes]
         if miss:
