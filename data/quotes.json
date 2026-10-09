@@ -1,5 +1,5 @@
 {
- "updatedAt": "2026-10-09 01:28",
+ "updatedAt": "2026-10-10 01:06",
  "source": "臺灣證券交易所、證券櫃檯買賣中心開放資料",
  "quotes": {
   "1503": {
@@ -1677,7 +1677,7 @@
    "grossPct": 9.17,
    "opPct": 3.96,
    "finPeriod": "2026Q2",
-   "mktcapB": 1070,
+   "mktcapB": 1177,
    "revMonth": "2026-08",
    "revYoy": 119.9,
    "revYoy3m": 79.8
