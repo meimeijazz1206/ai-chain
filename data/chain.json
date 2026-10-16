@@ -28,7 +28,8 @@
       "id": "mem",
       "name": "記憶體缺貨",
       "note": "2026 為十五年來最嚴重的記憶體缺貨。AI 伺服器排擠一般產能，DRAM、NAND、HBM 同步漲價。戴爾管理層在法說指出最缺的是 DRAM，其次 NAND。集邦 2026-09-30 預估第四季一般型 DRAM 合約價季增 10% 到 15%、NAND 季增 15% 到 20%，企業級 SSD 是唯一漲勢還在加快的品類，NAND 已不是先前預期的先轉寬鬆。",
-      "codes": ["2408", "2344", "2337", "8299", "5351", "3260", "5289", "4967", "2451", "8088", "6239", "2449", "6257"]
+      "codes": ["2408", "2344", "2337", "8299", "5351", "3260", "5289", "4967", "2451", "8088", "6239", "2449", "6257"],
+      "checked": "2026-10-16"
     },
     {"id": "glass", "name": "玻纖布與銅箔", "note": "AI 伺服器板層數拉到 34 到 50 層，必須用極低損耗材料，高階玻纖布與 HVLP4 銅箔出現結構性缺貨。台玻預估 Low Dk、Low CTE 供不應求會延續到 2027 年底。這是整條鏈最上游、最少人注意的瓶頸。", "codes": ["1815", "1802", "5475", "8358", "2383", "6274", "6213"]},
     {
@@ -41,18 +42,26 @@
     {"id": "wet", "name": "濕製程與 CoPoS", "note": "台積電從 CoWoS 走向 CoPoS 方形基板，方形載板的清洗、蝕刻與去膠難度大幅上升，半導體濕製程設備成為關鍵。設備廠是賣鏟子給賣鏟子的人，含金量常被低估。", "codes": ["3583", "3131", "6187", "5443", "2467", "3680", "1560", "3587"]},
     {"id": "cool", "name": "散熱與功耗牆", "note": "單櫃功耗跳到 130kW 以上，氣冷在物理上做不到，液冷從選配變必配。這層的成長不是來自出貨量，是單機價值量翻倍。", "codes": ["3017", "3324", "8996", "6125", "3653", "2421", "3483", "3338", "2308", "2301", "6282", "6805", "6449", "3357"]},
     {"id": "pkg", "name": "CoWoS 後段與測試", "note": "先進封裝的錢不是只流向台積電。晶片挑揀、系統級測試、探針卡與測試座都因為 AI 晶片腳數暴增與測試工時拉長而受惠，而且這些環節的競爭者遠比晶圓代工少。", "codes": ["6640", "2360", "6515", "6510", "6223", "2449", "6257", "3587", "3583", "3131", "COWOS", "COUPE", "6683"]},
-    {"id": "wafer", "name": "矽晶圓復甦", "note": "環球晶 2026 第二季法說指上半年復甦緩慢且不均，但 AI 需求已擴散到先進封裝、記憶體與成熟製程，12 吋、8 吋、6 吋與 GaN 矽基板產線接近滿載，下半年啟動漲價。SEMI 預估 2026 全球矽晶圓出貨面積年增 13.1%。這是景氣循環股，市場交易的是復甦幅度，財報要跟得上股價。", "codes": ["5483", "6488", "6182", "3532"]},
+    {
+      "id": "wafer",
+      "name": "矽晶圓復甦",
+      "note": "環球晶 2026 第二季法說指上半年復甦緩慢且不均，但 AI 需求已擴散到先進封裝、記憶體與成熟製程，12 吋、8 吋、6 吋與 GaN 矽基板產線接近滿載，下半年啟動漲價。SEMI 預估 2026 全球矽晶圓出貨面積年增 13.1%。這是景氣循環股，市場交易的是復甦幅度，財報要跟得上股價。",
+      "codes": ["5483", "6488", "6182", "3532"],
+      "checked": "2026-09-24"
+    },
     {
       "id": "power3",
       "name": "第三代半導體與 AI 電力",
       "note": "兩件事同時發生。一是輝達 800V 高壓直流架構，台達電 2027 第一季小量投產、第二季放量；六月曾傳延後至 2028，法人定調為階段調整而非趨勢反轉。二是台積電 2027 年 7 月底前退出 GaN 代工，納微 100V 產品 2026 上半年起在力積電量產，世界先進取得台積電授權、2028 上半年量產。碳化矽端由漢磊代工、嘉晶供磊晶。",
-      "codes": ["5347", "6770", "3707", "3016", "6488", "6182", "2308", "2301"]
+      "codes": ["5347", "6770", "3707", "3016", "6488", "6182", "2308", "2301"],
+      "checked": "2026-09-24"
     },
     {
       "id": "agent",
       "name": "企業 AI 落地",
       "note": "節目常把這群稱為「AI Agent 受惠股」，但錢實際從哪裡來要分清楚：查證下來，系統整合商的 AI 營收大多是幫企業轉售與建置 AI 伺服器、資安產品，代理軟體本身占比還小。它們賺的是服務財，不是模型或晶片的授權財，所以含金量都偏低。要追的是兩件事：台灣大公開收購精誠能否過關，以及 Claude 等模型經銷能否變成持續性收入。",
-      "codes": ["6811", "6689", "6997", "2480", "6112", "6214", "3045"]
+      "codes": ["6811", "6689", "6997", "2480", "6112", "6214", "3045"],
+      "checked": "2026-10-16"
     }
   ],
   "layers": [
@@ -106,7 +115,7 @@
           "name": "主權與電信骨幹",
           "nodes": [
             {"code": "2412", "name": "中華電", "role": "國網與主權 AI 算力承接者", "purity": 1, "bottleneck": 2, "subst": 3, "cross": ["L1", "L8"], "kind": "company"},
-            {"code": "3045", "name": "台灣大", "kind": "company", "role": "電信與 AI 算力服務，公開收購精誠以搶企業 AI 與 ICT 市場", "purity": 1, "bottleneck": 2, "subst": 3}
+            {"code": "3045", "name": "台灣大", "kind": "company", "role": "電信與 AI 算力服務，公開收購精誠以搶企業 AI 與 ICT 市場", "purity": 1, "bottleneck": 2, "subst": 3, "checked": "2026-10-16"}
           ]
         },
         {
@@ -115,11 +124,11 @@
           "refNote": "華碩的主節點在 L9，因為營收主體仍是硬體。但它透過台智雲做生成式 AI 雲與模型服務，是這層少數真正有落地的台股，點參照卡可以跳過去。",
           "nodes": [
             {"code": "6811", "name": "宏碁資訊", "role": "微軟體系與公部門 AI 落地主力", "purity": 2, "bottleneck": 2, "subst": 4, "kind": "company"},
-            {"code": "6689", "name": "伊雲谷", "role": "AWS 核心託管商。2026-02 取得 Anthropic 授權，透過 Amazon Bedrock 經銷 Claude，並提供 AI Agent 開發與資安託管", "purity": 2, "bottleneck": 2, "subst": 4, "kind": "company"},
-            {"code": "6997", "name": "博弘", "kind": "company", "role": "AWS 合作夥伴，同樣取得 Anthropic 授權，透過 Amazon Bedrock 經銷 Claude", "purity": 2, "bottleneck": 2, "subst": 4},
-            {"code": "2480", "name": "敦陽科", "kind": "company", "role": "企業 AI 與資安系統整合，代理 CrowdStrike、Palo Alto，並導入 NVIDIA AI Enterprise 與 AWS Bedrock", "purity": 2, "bottleneck": 2, "subst": 4},
-            {"code": "6112", "name": "邁達特", "kind": "company", "role": "企業 IT 與 AI 運算整合，法說會資料顯示 AI 運算是最大的營收來源", "purity": 3, "bottleneck": 2, "subst": 4},
-            {"code": "6214", "name": "精誠", "kind": "company", "role": "國內最大資訊服務商，金融業 AI 決策與多代理平台；營收主體仍是一般 IT。台灣大公開收購中，對價為現金 92.5 元加 0.84 股台灣大，股價目前主要跟著收購價走，不是反映 AI 題材", "purity": 1, "bottleneck": 2, "subst": 4}
+            {"code": "6689", "name": "伊雲谷", "role": "AWS 核心託管商。2026-02 取得 Anthropic 授權，透過 Amazon Bedrock 經銷 Claude，並提供 AI Agent 開發與資安託管", "purity": 2, "bottleneck": 2, "subst": 4, "kind": "company", "checked": "2026-10-16"},
+            {"code": "6997", "name": "博弘", "kind": "company", "role": "AWS 合作夥伴，同樣取得 Anthropic 授權，透過 Amazon Bedrock 經銷 Claude", "purity": 2, "bottleneck": 2, "subst": 4, "checked": "2026-10-16"},
+            {"code": "2480", "name": "敦陽科", "kind": "company", "role": "企業 AI 與資安系統整合，代理 CrowdStrike、Palo Alto，並導入 NVIDIA AI Enterprise 與 AWS Bedrock", "purity": 2, "bottleneck": 2, "subst": 4, "checked": "2026-10-16"},
+            {"code": "6112", "name": "邁達特", "kind": "company", "role": "企業 IT 與 AI 運算整合，法說會資料顯示 AI 運算是最大的營收來源", "purity": 3, "bottleneck": 2, "subst": 4, "checked": "2026-10-16"},
+            {"code": "6214", "name": "精誠", "kind": "company", "role": "國內最大資訊服務商，金融業 AI 決策與多代理平台；營收主體仍是一般 IT。台灣大公開收購中，對價為現金 92.5 元加 0.84 股台灣大，股價目前主要跟著收購價走，不是反映 AI 題材", "purity": 1, "bottleneck": 2, "subst": 4, "checked": "2026-10-16"}
           ]
         }
       ],
@@ -143,8 +152,8 @@
         {
           "name": "ASIC 設計服務",
           "nodes": [
-            {"code": "3661", "name": "世芯-KY", "role": "AI ASIC 設計服務，Amazon Trainium 主力夥伴，客戶集中度高", "purity": 5, "bottleneck": 4, "subst": 3, "kind": "company"},
-            {"code": "3443", "name": "創意", "role": "台積電轉投資的 ASIC 設計服務，2026 第二季雲端營收占八成", "purity": 4, "bottleneck": 4, "subst": 3, "kind": "company"},
+            {"code": "3661", "name": "世芯-KY", "role": "AI ASIC 設計服務，Amazon Trainium 主力夥伴，客戶集中度高", "purity": 5, "bottleneck": 4, "subst": 3, "kind": "company", "checked": "2026-09-24"},
+            {"code": "3443", "name": "創意", "role": "台積電轉投資的 ASIC 設計服務，2026 第二季雲端營收占八成", "purity": 4, "bottleneck": 4, "subst": 3, "kind": "company", "checked": "2026-09-24"},
             {"code": "3035", "name": "智原", "role": "ASIC 設計服務，AI 占比較低", "purity": 2, "bottleneck": 2, "subst": 4, "kind": "company"}
           ]
         },
@@ -192,10 +201,10 @@
         {
           "name": "晶圓代工",
           "nodes": [
-            {"code": "2330", "name": "台積電", "role": "先進製程與 CoWoS 市占極高，先進 AI 晶片幾乎必經", "purity": 3, "bottleneck": 5, "subst": 1, "kind": "company"},
+            {"code": "2330", "name": "台積電", "role": "先進製程與 CoWoS 市占極高，先進 AI 晶片幾乎必經", "purity": 3, "bottleneck": 5, "subst": 1, "kind": "company", "checked": "2026-10-16"},
             {"code": "2303", "name": "聯電", "role": "成熟製程，AI 間接受惠", "purity": 1, "bottleneck": 2, "subst": 4, "kind": "company"},
-            {"code": "6770", "name": "力積電", "role": "記憶體與成熟製程代工。承接納微 GaN 功率元件，100V 產品 2026 上半年於竹南 8B 廠量產，650V 由台積電逐步轉入", "purity": 1, "bottleneck": 2, "subst": 4, "cross": ["L3", "L4"], "kind": "company"},
-            {"code": "5347", "name": "世界先進", "role": "成熟製程代工。取得台積電 GaN 授權，2028 上半年量產後成為全球唯一同時提供矽基與 QST 基板 GaN 製程的代工廠；矽光子 PIC 也用成熟節點", "purity": 1, "bottleneck": 3, "subst": 3, "kind": "company"}
+            {"code": "6770", "name": "力積電", "role": "記憶體與成熟製程代工。承接納微 GaN 功率元件，100V 產品 2026 上半年於竹南 8B 廠量產，650V 由台積電逐步轉入", "purity": 1, "bottleneck": 2, "subst": 4, "cross": ["L3", "L4"], "kind": "company", "checked": "2026-09-24"},
+            {"code": "5347", "name": "世界先進", "role": "成熟製程代工。取得台積電 GaN 授權，2028 上半年量產後成為全球唯一同時提供矽基與 QST 基板 GaN 製程的代工廠；矽光子 PIC 也用成熟節點", "purity": 1, "bottleneck": 3, "subst": 3, "kind": "company", "checked": "2026-09-24"}
           ]
         },
         {
@@ -241,10 +250,10 @@
         {
           "name": "矽晶圓",
           "nodes": [
-            {"code": "6488", "name": "環球晶", "role": "矽晶圓全球前三。12 吋、8 吋、6 吋與 GaN 矽基板產線接近滿載，2026 下半年啟動漲價", "purity": 2, "bottleneck": 4, "subst": 2, "kind": "company"},
+            {"code": "6488", "name": "環球晶", "role": "矽晶圓全球前三。12 吋、8 吋、6 吋與 GaN 矽基板產線接近滿載，2026 下半年啟動漲價", "purity": 2, "bottleneck": 4, "subst": 2, "kind": "company", "checked": "2026-09-24"},
             {"code": "3532", "name": "台勝科", "role": "矽晶圓", "purity": 2, "bottleneck": 3, "subst": 3, "kind": "company"},
-            {"code": "5483", "name": "中美晶", "kind": "company", "role": "環球晶母公司，集團橫跨矽晶圓、太陽能與化合物半導體", "purity": 2, "bottleneck": 3, "subst": 3},
-            {"code": "6182", "name": "合晶", "kind": "company", "role": "全球第六大矽晶圓廠，布局 12 吋、SOI 與 GaN 磊晶", "purity": 2, "bottleneck": 3, "subst": 3}
+            {"code": "5483", "name": "中美晶", "kind": "company", "role": "環球晶母公司，集團橫跨矽晶圓、太陽能與化合物半導體", "purity": 2, "bottleneck": 3, "subst": 3, "checked": "2026-09-24"},
+            {"code": "6182", "name": "合晶", "kind": "company", "role": "全球第六大矽晶圓廠，布局 12 吋、SOI 與 GaN 磊晶", "purity": 2, "bottleneck": 3, "subst": 3, "checked": "2026-09-24"}
           ]
         },
         {
@@ -252,9 +261,9 @@
           "refs": ["5347", "6770"],
           "refNote": "世界先進與力積電的主節點在晶圓代工。前者取得台積電 GaN 授權、2028 上半年量產；後者承接納微 GaN 轉單、2026 上半年量產。兩者時間點差兩年，不是同一件事。",
           "nodes": [
-            {"code": "NAVITAS", "name": "納微", "ext": true, "kind": "anchor", "role": "GaN 功率元件設計商，台積電退出 GaN 代工後把產品移往力積電"},
-            {"code": "3707", "name": "漢磊", "kind": "company", "role": "台灣少數具碳化矽功率元件代工能力者，4 吋與 6 吋 SiC 平台，從車用工控延伸到 AI 伺服器電源", "purity": 2, "bottleneck": 3, "subst": 3},
-            {"code": "3016", "name": "嘉晶", "kind": "company", "role": "碳化矽與氮化鎵磊晶，800V 架構拉高功率元件用量，上游磊晶同步受惠", "purity": 2, "bottleneck": 3, "subst": 3}
+            {"code": "NAVITAS", "name": "納微", "ext": true, "kind": "anchor", "role": "GaN 功率元件設計商，台積電退出 GaN 代工後把產品移往力積電", "checked": "2026-09-24"},
+            {"code": "3707", "name": "漢磊", "kind": "company", "role": "台灣少數具碳化矽功率元件代工能力者，4 吋與 6 吋 SiC 平台，從車用工控延伸到 AI 伺服器電源", "purity": 2, "bottleneck": 3, "subst": 3, "checked": "2026-09-24"},
+            {"code": "3016", "name": "嘉晶", "kind": "company", "role": "碳化矽與氮化鎵磊晶，800V 架構拉高功率元件用量，上游磊晶同步受惠", "purity": 2, "bottleneck": 3, "subst": 3, "checked": "2026-09-24"}
           ]
         }
       ],
@@ -505,7 +514,7 @@
           "nodes": [
             {"code": "LPO", "name": "LPO 線性直驅光學", "ext": true, "kind": "standard", "role": "把光模組裡的 DSP 拿掉以省電省成本。DSP 原本負責補償訊號劣化，拿掉之後對雷射光源與磊晶品質的要求不降反升，等於把價值往上游推"},
             {"code": "3081", "name": "聯亞", "role": "矽光子 CW 雷射磊晶片。用 MOCVD 做磷化銦與砷化鎵磊晶，位在光通訊最上游。1.6T 用的 CW Laser 已量產，3.2T 送客戶驗證中", "purity": 5, "bottleneck": 5, "subst": 1, "kind": "company"},
-            {"code": "6451", "name": "訊芯-KY", "role": "鴻海集團的光收發模組與 SiP 封裝廠，河內產 100G／200G、廣州產 400G／800G，與博通在 CPO 長期合作", "purity": 5, "bottleneck": 5, "subst": 2, "kind": "company"},
+            {"code": "6451", "name": "訊芯-KY", "role": "鴻海集團的光收發模組與 SiP 封裝廠，河內產 100G／200G、廣州產 400G／800G，與博通在 CPO 長期合作", "purity": 5, "bottleneck": 5, "subst": 2, "kind": "company", "checked": "2026-09-24"},
             {"code": "6442", "name": "光聖", "role": "光纖連接與資料中心佈線", "purity": 4, "bottleneck": 3, "subst": 3, "kind": "company"},
             {"code": "3163", "name": "波若威", "role": "光被動元件", "purity": 3, "bottleneck": 3, "subst": 3, "kind": "company"},
             {"code": "3363", "name": "上詮", "role": "光纖陣列，共同封裝光學受惠", "purity": 4, "bottleneck": 4, "subst": 2, "kind": "company"},
