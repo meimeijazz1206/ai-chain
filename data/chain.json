@@ -40,7 +40,13 @@
       "checked": "2026-10-16"
     },
     {"id": "mature", "name": "成熟製程回春", "note": "矽光子的光子晶片 PIC 用的是成熟製程節點，電子晶片 EIC 才用先進製程。CPO 放量會把成熟製程從殺價競爭拉回結構性需求，這是成熟製程廠被重新評價的理由。", "codes": ["2303", "5347", "6770", "6789", "3374", "CPO"], "checked": "2026-10-16"},
-    {"id": "wet", "name": "濕製程與 CoPoS", "note": "台積電從 CoWoS 走向 CoPoS 方形基板，方形載板的清洗、蝕刻與去膠難度大幅上升，半導體濕製程設備成為關鍵。設備廠是賣鏟子給賣鏟子的人，含金量常被低估。", "codes": ["3583", "3131", "6187", "5443", "2467", "3680", "1560", "3587"]},
+    {
+      "id": "wet",
+      "name": "濕製程與 CoPoS",
+      "note": "台積電正在建置 CoPoS（方形面板級封裝）試驗線，與 CoWoS 並行發展；據 TrendForce 2026 年 6 月分析，預計 2027 年試產、2028 下半年量產。方形載板讓清洗、蝕刻與去膠製程更難，濕製程設備廠是潛在受惠者，實際訂單仍待驗證。",
+      "codes": ["3583", "3131", "6187", "5443", "2467", "3680", "1560", "3587"],
+      "checked": "2026-10-16"
+    },
     {"id": "cool", "name": "散熱與功耗牆", "note": "單櫃功耗跳到 130kW 以上，氣冷在物理上做不到，液冷從選配變必配。這層的成長不是來自出貨量，是單機價值量翻倍。", "codes": ["3017", "3324", "8996", "6125", "3653", "2421", "3483", "3338", "2308", "2301", "6282", "6805", "6449", "3357"], "checked": "2026-10-16"},
     {
       "id": "pkg",
@@ -484,11 +490,11 @@
           "name": "重電與變壓器",
           "nodes": [
             {"code": "1519", "name": "華城", "role": "變壓器出口美國，交期長訂單能見度高", "purity": 3, "bottleneck": 5, "subst": 2, "kind": "company"},
-            {"code": "1503", "name": "士電", "role": "重電與馬達", "purity": 2, "bottleneck": 4, "subst": 2, "kind": "company"},
-            {"code": "1513", "name": "中興電", "role": "氣體絕緣開關與統包工程", "purity": 2, "bottleneck": 4, "subst": 2, "kind": "company"},
-            {"code": "1514", "name": "亞力", "role": "配電盤與電力設備", "purity": 2, "bottleneck": 3, "subst": 3, "kind": "company"},
+            {"code": "1503", "name": "士電", "role": "重電與馬達", "purity": 2, "bottleneck": 4, "subst": 2, "kind": "company", "checked": "2026-10-16"},
+            {"code": "1513", "name": "中興電", "role": "氣體絕緣開關與統包工程", "purity": 2, "bottleneck": 4, "subst": 2, "kind": "company", "checked": "2026-10-16"},
+            {"code": "1514", "name": "亞力", "role": "配電盤與電力設備", "purity": 2, "bottleneck": 3, "subst": 3, "kind": "company", "checked": "2026-10-16"},
             {"code": "2371", "name": "大同", "role": "重電與電力工程", "purity": 1, "bottleneck": 3, "subst": 3, "cross": ["L8", "L9"], "kind": "company"},
-            {"code": "1504", "name": "東元", "role": "馬達與重電", "purity": 1, "bottleneck": 3, "subst": 3, "cross": ["L8", "L9"], "kind": "company"}
+            {"code": "1504", "name": "東元", "role": "馬達與重電", "purity": 1, "bottleneck": 3, "subst": 3, "cross": ["L8", "L9"], "kind": "company", "checked": "2026-10-16"}
           ]
         },
         {

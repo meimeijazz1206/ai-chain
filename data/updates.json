@@ -4,6 +4,18 @@
     {
       "date": "2026-10-16",
       "tag": "fix",
+      "text": "CoPoS 主題說明更新：改寫為試驗線建置中、預計 2028 下半年量產，濕製程設備廠受惠仍待驗證",
+      "source": "工商時報",
+      "url": "https://www.ctee.com.tw/news/20260616700047-430501",
+      "codes": [
+        "2330",
+        "3131",
+        "3583"
+      ]
+    },
+    {
+      "date": "2026-10-16",
+      "tag": "fix",
       "text": "CPO 主題說明改為台積電官方口徑：COUPE 首款產品排定 2026 年量產，不再寫成已進入量產",
       "source": "台積電技術論壇（TechNews 報導）",
       "url": "https://technews.tw/ai-agent/tsmc-reveals-its-technology-layout-from-cpo-packaging-to-silicon-photonics-coupe/8941/",
