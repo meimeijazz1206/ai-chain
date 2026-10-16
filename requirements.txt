@@ -1,3 +1,4 @@
-# 只有抓報價需要。自我檢查與建置只用 Python 標準庫
+# 只有舊的 Yahoo 版 fetch_quotes.py 需要。
+# 公開網站用的 fetch_official.py，以及自我檢查與建置，都只用 Python 標準庫
 yfinance==1.2.0
 pandas==2.3.3

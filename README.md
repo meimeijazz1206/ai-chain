@@ -38,7 +38,7 @@ python3 ai-chain/scripts/fetch_official.py
 | `scripts/fetch_quotes.py` | 舊的 Yahoo 版，只留給本機研究，**公開網站不使用**（Yahoo 條款限制轉載） |
 | `scripts/serve.py` | 本機靜態伺服器 |
 | `scripts/format_chain.py` | chain.json 格式化。用程式改過資料後一律用它寫回 |
-| `scripts/build_standalone.py` | 打包成單檔，兩頁各出 standalone 與 artifact 兩種 |
+| `scripts/build_standalone.py` | 打包成單檔，index、rings、signals 三頁各出 standalone 與 artifact 兩種（舊 Artifact 用，公開網站不使用） |
 
 ## 兩種畫法
 
@@ -194,8 +194,8 @@ L1 台股標的很少，這是刻意保留的稀缺層。空層本身就是資�
 - **公司卡片的研究欄位**。客戶集中度、產能與交期、受惠條件與失效條件，官方開放資料
   拿不到，要逐家讀年報與法說。147 檔要人工整理，這是最大的一筆成本。
   單檔深挖建議接到既有的 stock-thesis 流程，不要在這裡重造。
-- **公司描述的複查日期**。關聯線已有 `conf` 可信度與 `checked` 查證日期，需要追蹤的線
-  都已查證過；但公司本身的定位描述還沒有複查日期。出處網址目前只放在跑馬燈的
+- **出處網址逐條掛上**。關聯線有 `conf` 可信度與 `checked` 查證日期，公司描述也已納入
+  `review.py` 的輪替查證，查過的節點會帶 `checked`；但出處網址目前只放在跑馬燈的
   `data/updates.json`，還沒逐條掛到關聯線上。
 - **技術標準的台股對應**。技術標準節點透過關聯線連到台股，CPO、機櫃級系統已經接上；
   CXL、SOCAMM 還沒有任何一檔台股連上。UALink 尚未收錄。補的時候照規則先查證。
