@@ -4,7 +4,7 @@
     "axis": "錢流方向：由資本支出源頭往下流到各層供應商",
     "scoring": "含金量、瓶頸度、可替代性皆為 1 到 5 的主觀評分，依 meta.rubric 的定義判斷，不是公司揭露數字。用途是比較同一層裡誰比較純、誰比較有定價權。",
     "disclaimer": "產業關係為公開資訊整理，僅供研究，非投資建議",
-    "updated": "2026-09-24",
+    "updated": "2026-10-16",
     "rubric": {
       "purity": {"label": "含金量", "hint": "AI 相關營收占比，越高越純", "1": "幾乎沒有，只是題材沾邊", "2": "一成上下", "3": "兩到四成", "4": "約一半", "5": "多數營收來自 AI"},
       "bottleneck": {"label": "瓶頸度", "hint": "有沒有定價權，漲價傳導得動嗎", "1": "完全紅海，客戶說了算", "2": "議價力弱", "3": "普通", "4": "供給偏緊，能漲價", "5": "卡脖子環節，客戶要排隊"},
@@ -27,7 +27,7 @@
     {
       "id": "mem",
       "name": "記憶體缺貨",
-      "note": "2026 為十五年來最嚴重的記憶體缺貨。AI 伺服器排擠一般產能，DRAM、NAND、HBM 同步漲價。戴爾管理層在法說指出目前最缺的是 DRAM，其次 NAND，部分 CPU 與硬碟也缺。研調預期 DRAM 缺口延續到 2027，NAND 則可能先轉寬鬆，兩者會分化。",
+      "note": "2026 為十五年來最嚴重的記憶體缺貨。AI 伺服器排擠一般產能，DRAM、NAND、HBM 同步漲價。戴爾管理層在法說指出最缺的是 DRAM，其次 NAND。集邦 2026-09-30 預估第四季一般型 DRAM 合約價季增 10% 到 15%、NAND 季增 15% 到 20%，企業級 SSD 是唯一漲勢還在加快的品類，NAND 已不是先前預期的先轉寬鬆。",
       "codes": ["2408", "2344", "2337", "8299", "5351", "3260", "5289", "4967", "2451", "8088", "6239", "2449", "6257"]
     },
     {"id": "glass", "name": "玻纖布與銅箔", "note": "AI 伺服器板層數拉到 34 到 50 層，必須用極低損耗材料，高階玻纖布與 HVLP4 銅箔出現結構性缺貨。台玻預估 Low Dk、Low CTE 供不應求會延續到 2027 年底。這是整條鏈最上游、最少人注意的瓶頸。", "codes": ["1815", "1802", "5475", "8358", "2383", "6274", "6213"]},
@@ -47,6 +47,12 @@
       "name": "第三代半導體與 AI 電力",
       "note": "兩件事同時發生。一是輝達 800V 高壓直流架構，台達電 2027 第一季小量投產、第二季放量；六月曾傳延後至 2028，法人定調為階段調整而非趨勢反轉。二是台積電 2027 年 7 月底前退出 GaN 代工，納微 100V 產品 2026 上半年起在力積電量產，世界先進取得台積電授權、2028 上半年量產。碳化矽端由漢磊代工、嘉晶供磊晶。",
       "codes": ["5347", "6770", "3707", "3016", "6488", "6182", "2308", "2301"]
+    },
+    {
+      "id": "agent",
+      "name": "企業 AI 落地",
+      "note": "節目常把這群稱為「AI Agent 受惠股」，但錢實際從哪裡來要分清楚：查證下來，系統整合商的 AI 營收大多是幫企業轉售與建置 AI 伺服器、資安產品，代理軟體本身占比還小。它們賺的是服務財，不是模型或晶片的授權財，所以含金量都偏低。要追的是兩件事：台灣大公開收購精誠能否過關，以及 Claude 等模型經銷能否變成持續性收入。",
+      "codes": ["6811", "6689", "6997", "2480", "6112", "6214", "3045"]
     }
   ],
   "layers": [
@@ -99,16 +105,21 @@
         {
           "name": "主權與電信骨幹",
           "nodes": [
-            {"code": "2412", "name": "中華電", "role": "國網與主權 AI 算力承接者", "purity": 1, "bottleneck": 2, "subst": 3, "cross": ["L1", "L8"], "kind": "company"}
+            {"code": "2412", "name": "中華電", "role": "國網與主權 AI 算力承接者", "purity": 1, "bottleneck": 2, "subst": 3, "cross": ["L1", "L8"], "kind": "company"},
+            {"code": "3045", "name": "台灣大", "kind": "company", "role": "電信與 AI 算力服務，公開收購精誠以搶企業 AI 與 ICT 市場", "purity": 1, "bottleneck": 2, "subst": 3}
           ]
         },
         {
-          "name": "企業雲端落地 MSP",
+          "name": "企業 AI 落地與系統整合",
           "refs": ["2357"],
           "refNote": "華碩的主節點在 L9，因為營收主體仍是硬體。但它透過台智雲做生成式 AI 雲與模型服務，是這層少數真正有落地的台股，點參照卡可以跳過去。",
           "nodes": [
             {"code": "6811", "name": "宏碁資訊", "role": "微軟體系與公部門 AI 落地主力", "purity": 2, "bottleneck": 2, "subst": 4, "kind": "company"},
-            {"code": "6689", "name": "伊雲谷", "role": "AWS 核心託管商，企業上雲的代理層", "purity": 2, "bottleneck": 2, "subst": 4, "kind": "company"}
+            {"code": "6689", "name": "伊雲谷", "role": "AWS 核心託管商。2026-02 取得 Anthropic 授權，透過 Amazon Bedrock 經銷 Claude，並提供 AI Agent 開發與資安託管", "purity": 2, "bottleneck": 2, "subst": 4, "kind": "company"},
+            {"code": "6997", "name": "博弘", "kind": "company", "role": "AWS 合作夥伴，同樣取得 Anthropic 授權，透過 Amazon Bedrock 經銷 Claude", "purity": 2, "bottleneck": 2, "subst": 4},
+            {"code": "2480", "name": "敦陽科", "kind": "company", "role": "企業 AI 與資安系統整合，代理 CrowdStrike、Palo Alto，並導入 NVIDIA AI Enterprise 與 AWS Bedrock", "purity": 2, "bottleneck": 2, "subst": 4},
+            {"code": "6112", "name": "邁達特", "kind": "company", "role": "企業 IT 與 AI 運算整合，法說會資料顯示 AI 運算是最大的營收來源", "purity": 3, "bottleneck": 2, "subst": 4},
+            {"code": "6214", "name": "精誠", "kind": "company", "role": "國內最大資訊服務商，金融業 AI 決策與多代理平台；營收主體仍是一般 IT。台灣大公開收購中，對價為現金 92.5 元加 0.84 股台灣大，股價目前主要跟著收購價走，不是反映 AI 題材", "purity": 1, "bottleneck": 2, "subst": 4}
           ]
         }
       ],
@@ -621,7 +632,7 @@
     {"from": "3711", "to": "2330", "type": "substitute", "note": "FOPLP 面板級封裝是 CoWoS 產能瓶頸的分流方案", "conf": "common"},
     {"from": "3661", "to": "NVDA", "type": "substitute", "note": "ASIC 專用晶片壓縮通用 GPU 的推論市場", "conf": "common"},
     {"from": "OPENAI", "to": "1519", "type": "supply", "note": "自建資料中心帶動變壓器需求", "conf": "common"},
-    {"from": "OPENAI", "to": "2330", "type": "alliance", "note": "自研晶片投片", "conf": "common"},
+    {"from": "OPENAI", "to": "2330", "type": "alliance", "note": "自研推論晶片由博通負責製造，台積電代工為媒體報導，兩家公司都未正式說明", "conf": "reported", "checked": "2026-10-16"},
     {"from": "SOVEREIGN", "to": "2382", "type": "supply", "note": "國家級算力採購", "conf": "common"},
     {"from": "MSFT", "to": "NVDA", "type": "supply", "note": "最大 GPU 採購方之一", "conf": "common"},
     {"from": "GOOGL", "to": "6669", "type": "supply", "note": "TPU 機櫃直接下單", "conf": "common"},
@@ -707,6 +718,12 @@
     {"from": "NAVITAS", "to": "6770", "type": "supply", "note": "納微 100V 至 650V GaN 功率元件轉由力積電竹南 8B 廠代工，100V 系列 2026 上半年量產", "conf": "disclosed", "checked": "2026-09-24"},
     {"from": "2330", "to": "5347", "type": "alliance", "note": "台積電授權 GaN 製程技術給世界先進，2028 上半年量產", "conf": "disclosed", "checked": "2026-09-24"},
     {"from": "3443", "to": "6669", "type": "alliance", "note": "創意與緯穎宣布策略技術合作，結合 2.5D／3D 先進封裝與機櫃液冷整合", "conf": "disclosed", "checked": "2026-09-24"},
-    {"from": "6488", "to": "MU", "type": "supply", "note": "與美光簽十年長約，含策略資金與逾 5 億美元預付款", "conf": "disclosed", "checked": "2026-09-24"}
+    {"from": "6488", "to": "MU", "type": "supply", "note": "與美光簽十年長約，含策略資金與逾 5 億美元預付款", "conf": "disclosed", "checked": "2026-09-24"},
+    {"from": "OPENAI", "to": "AVGO", "type": "alliance", "note": "2026-06 發表首款自研推論晶片 Jalapeño，博通負責晶片實作與製造；雙方 10GW 部署協議自 2026 下半年起分批建置", "conf": "disclosed", "checked": "2026-10-16"},
+    {"from": "3045", "to": "6214", "type": "equity", "note": "已持有精誠約 11.86%，並透過子公司台信電訊公開收購、目標持股過半。期限延至 2026-11-05，尚待公平會不禁止結合", "conf": "disclosed", "checked": "2026-10-16"},
+    {"from": "GEMINI", "to": "6689", "type": "supply", "note": "取得 Anthropic 授權，透過 Amazon Bedrock 經銷 Claude", "conf": "disclosed", "checked": "2026-10-16"},
+    {"from": "GEMINI", "to": "6997", "type": "supply", "note": "取得 Anthropic 授權，透過 Amazon Bedrock 經銷 Claude", "conf": "disclosed", "checked": "2026-10-16"},
+    {"from": "6689", "to": "6997", "type": "substitute", "note": "同為 AWS 合作夥伴、同樣經銷 Claude，客戶重疊度高", "conf": "common", "checked": "2026-10-16"},
+    {"from": "NVDA-CUDA", "to": "2480", "type": "supply", "note": "導入 NVIDIA AI Enterprise，協助企業在地端部署 AI 模型", "conf": "reported", "checked": "2026-10-16"}
   ]
 }

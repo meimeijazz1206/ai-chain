@@ -29,7 +29,7 @@ import json
 import sys
 import time
 import urllib.request
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -146,6 +146,36 @@ def revenue_yoy(seq, latest):
     return one, three
 
 
+def fetch_day(d, codes, gap=3.0):
+    """指定日期上市與上櫃的收盤 → {代號: 收盤}。休市回傳 None。d 是 datetime.date。"""
+    tw = get(f"https://www.twse.com.tw/rwd/zh/afterTrading/MI_INDEX?date={d:%Y%m%d}&type=ALLBUT0999&response=json")
+    time.sleep(gap)
+    if tw.get("stat") != "OK":
+        return None
+    t = next(t for t in tw["tables"] if "證券代號" in t.get("fields", []) and "收盤價" in t["fields"])
+    ic, iclose = t["fields"].index("證券代號"), t["fields"].index("收盤價")
+    day = {r[ic]: num(r[iclose]) for r in t["data"] if r[ic] in codes}
+    otc = get(f"https://www.tpex.org.tw/www/zh-tw/afterTrading/otc?date={d:%Y}%2F{d:%m}%2F{d:%d}&type=EW&response=json")
+    time.sleep(gap / 2)
+    for tb in otc.get("tables", []):
+        f = [x.strip() for x in tb.get("fields", [])]
+        if "代號" in f and "收盤" in f:
+            ic2, ic3 = f.index("代號"), f.index("收盤")
+            day.update({r[ic2]: num(r[ic3]) for r in tb["data"] if r and r[ic2] in codes})
+            break
+    return day
+
+
+def market_holidays():
+    """證交所公布的今年休市日。抓不到回傳 None，呼叫端就不做補缺日。
+    「開始交易日」「最後交易日」也列在這張表上，但那兩天有開市，要排除。"""
+    try:
+        rows = get("https://openapi.twse.com.tw/v1/holidaySchedule/holidaySchedule")
+    except Exception:
+        return None
+    return {roc(r["Date"]) for r in rows if "交易日" not in r.get("Name", "")}
+
+
 def company_codes():
     chain = json.loads((DATA / "chain.json").read_text(encoding="utf-8"))
     return sorted({n["code"] for L in chain["layers"] for G in L["groups"] for n in G["nodes"]
@@ -240,6 +270,24 @@ def main():
         seq = [p for p in hist.get(c, []) if p[0] != day]   # 同一天重跑就覆蓋，不重複
         seq.append([day, r["close"]])
         hist[c] = sorted(seq)[-HIST_KEEP:]
+
+    # 雲端排程偶爾整次沒跑（2026-10-13 就漏了），缺一天會讓兩天的漲跌被當成一天，
+    # 半年位階與月線悄悄算錯。所以每次檢查近 30 天，有開市卻沒資料的日子就補抓
+    holidays = market_holidays()
+    if holidays is not None:
+        have_days = {p[0] for seq in hist.values() for p in seq}
+        d0 = date.fromisoformat(day)
+        recent = [d0 - timedelta(days=k) for k in range(1, 31)]
+        missing = [x for x in recent if x.weekday() < 5 and x.isoformat() not in holidays
+                   and x.isoformat() not in have_days and x.isoformat() >= min(have_days, default=day)]
+        for x in sorted(missing):
+            got = fetch_day(x, codes)
+            if not got:
+                continue
+            for c, v in got.items():
+                if v is not None:
+                    hist[c] = sorted([p for p in hist.get(c, []) if p[0] != x.isoformat()] + [[x.isoformat(), v]])[-HIST_KEEP:]
+            print(f"補上漏抓的交易日 {x.isoformat()}：{len(got)} 檔")
 
     starts = [seq[0][0] for seq in hist.values() if seq]
     events = ex_right_factors(min(starts), day, codes) if starts else {}
