@@ -3,6 +3,16 @@
   "items": [
     {
       "date": "2026-10-16",
+      "tag": "fix",
+      "text": "CPO 主題說明改為台積電官方口徑：COUPE 首款產品排定 2026 年量產，不再寫成已進入量產",
+      "source": "台積電技術論壇（TechNews 報導）",
+      "url": "https://technews.tw/ai-agent/tsmc-reveals-its-technology-layout-from-cpo-packaging-to-silicon-photonics-coupe/8941/",
+      "codes": [
+        "2330"
+      ]
+    },
+    {
+      "date": "2026-10-16",
       "tag": "news",
       "text": "台灣大公開收購精誠延至 11/5，仍待公平會不禁止結合",
       "source": "壹蘋新聞網",
