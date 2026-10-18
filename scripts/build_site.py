@@ -35,6 +35,10 @@ def main():
         elif name != "updates.json":          # 跑馬燈可以沒有，其他不行
             sys.exit(f"缺少 data/{name}，中止建置")
 
+    # 分享預覽圖（og:image），由 ai-chain-promo/make_og.py 產生
+    if (ROOT / "og").is_dir():
+        shutil.copytree(ROOT / "og", OUT / "og")
+
     # 告訴 GitHub Pages 不要用 Jekyll 處理，檔案原樣提供
     (OUT / ".nojekyll").write_text("")
 
