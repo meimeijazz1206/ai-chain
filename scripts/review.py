@@ -15,24 +15,35 @@
 
     python3 scripts/review.py start [N]                        同步並列出今天要查的 N 項（預設 5）
     python3 scripts/review.py ok ID [ID ...]                    查證後仍然成立，蓋上今天日期
-    python3 scripts/review.py fix ID --text "..." [--conf C] [--type T]   說法要改
-    python3 scripts/review.py ticker --tag fix --text "..." --source "..." --url https://... [--codes 2330,3711]
+    python3 scripts/review.py fix ID --text "..." --ticker "改了什麼" --source "..." --url https://... --expect "關鍵字,關鍵字" [--codes 2330] [--conf C] [--type T]
+    python3 scripts/review.py ticker --tag news --text "..." --source "..." --url https://... --expect "關鍵字,關鍵字" [--codes 2330,3711]
     python3 scripts/review.py finish                           再檢查一次，有變更才提交並推上 GitHub
 
 ID 的寫法：關聯線 E:來源>對象:型態，主題 T:主題代號，節點 N:代號。start 會直接印出來。
+
+改說法或加跑馬燈之前，程式會先打開來源頁核對：AI 生成的頁面一律退回；--expect 至少兩個關鍵字
+（新說法裡的數字、日期、公司或產品名），而且都要真的出現在那一頁上。
+2026-10-16 第一次排程就錯了兩次：引用 TechNews 的 AI 問答頁，以及把別篇報導的時程掛在這篇底下。
 """
 import argparse
+import html
 import json
+import re
 import subprocess
 import sys
+import unicodedata
+import urllib.request
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import format_chain   # noqa: E402
+from verify import AI_PAGE_URL   # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 UPDATES = ROOT / "data" / "updates.json"
+AI_PAGE_TEXT = ("內容由 AI 協助生成", "Powered by TechNews Smart AI")   # 頁面上的 AI 生成聲明
+UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_0) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15"
 TODAY = datetime.now(timezone(timedelta(hours=8))).date()
 BACKLOG_START = date(2026, 10, 16)       # 開始輪替的日子，從沒查過的項目從這天起分批排程
 BACKLOG_PER_DAY = 3                      # 以日曆天計，約等於每個交易日四項
@@ -125,40 +136,84 @@ def cmd_ok(ids):
     format_chain.write(d)
 
 
-def cmd_fix(iid, text, conf, typ):
-    d = json.loads(format_chain.CHAIN.read_text(encoding="utf-8"))
-    _, kind, obj, field, title = find(d, iid)
-    if text:
-        obj[field] = text.strip()
-    if conf:
-        if conf not in CONFS or kind not in ("edge", "common"):
-            sys.exit(f"可信度只能用在關聯線，而且只有 {sorted(CONFS)}")
-        obj["conf"] = conf
-    if typ:
-        if typ not in TYPES or kind not in ("edge", "common"):
-            sys.exit(f"型態只能用在關聯線，而且只有 {sorted(TYPES)}")
-        obj["type"] = typ
-    stamp(obj)
-    format_chain.write(d)
-    print(f"✎ {title}：已修正並蓋上 {TODAY}")
+def flat(s):
+    """去掉空白、全形轉半形、英文轉小寫，比對關鍵字時不受排版影響。"""
+    return re.sub(r"\s+", "", unicodedata.normalize("NFKC", s)).lower()
 
 
-def cmd_ticker(tag, text, source, url, codes):
-    if tag not in ("new", "fix", "news"):
-        sys.exit("tag 只能是 new、fix、news")
+def check_source(url, expect):
+    """打開來源頁核對，任何一關沒過就停下來，資料一個字都不動。"""
+    url = url.strip()
     if not url.startswith("https://"):
         sys.exit("來源必須是 https 連結")
-    d = json.loads(format_chain.CHAIN.read_text(encoding="utf-8"))
+    if any(p in url for p in AI_PAGE_URL):
+        sys.exit("這是 AI 生成的頁面，只能當線索，不能當來源。打開它引用的原始報導，改用那一篇")
+    keys = [k.strip() for k in (expect or "").split(",") if k.strip()]
+    if len(keys) < 2:
+        sys.exit("--expect 至少給兩個關鍵字（新說法裡的數字、日期、公司或產品名），用來確認來源頁真的寫著")
+    req = urllib.request.Request(url, headers={"User-Agent": UA, "Accept-Language": "zh-TW,zh;q=0.9,en;q=0.8"})
+    try:
+        with urllib.request.urlopen(req, timeout=25) as r:
+            ctype = r.headers.get("Content-Type", "")
+            raw = r.read(4_000_000).decode(r.headers.get_content_charset() or "utf-8", "replace")
+    except Exception as ex:
+        sys.exit(f"來源打不開（{ex}），沒辦法確認上面寫了什麼。換一個打得開的來源，或今天先不改")
+    if "html" not in ctype and "text" not in ctype:
+        sys.exit(f"來源不是網頁（{ctype or '格式不明'}），程式讀不到內文。改用報導或新聞稿的網頁版")
+    text = flat(html.unescape(re.sub(r"<[^>]+>", " ", re.sub(r"(?is)<(script|style)\b.*?</\1>", " ", raw))))
+    if any(flat(m) in text for m in AI_PAGE_TEXT):
+        sys.exit("這一頁註明是 AI 生成的內容，只能當線索，不能當來源")
+    missing = [k for k in keys if flat(k) not in text]
+    if missing:
+        sys.exit(f"來源頁上找不到 {missing}。說法要以這一頁實際寫的為準；資料其實出自別篇，就引用那一篇")
+    print(f"✓ 來源已打開核對，頁面上寫著：{'、'.join(keys)}")
+
+
+def parse_codes(d, codes):
     known = {n["code"] for L in d["layers"] for G in L["groups"] for n in G["nodes"]}
     codes = [c.strip() for c in (codes or "").split(",") if c.strip()]
     bad = [c for c in codes if c not in known]
     if bad:
         sys.exit(f"這些代號不在資料裡：{bad}")
+    return codes
+
+
+def add_ticker(tag, text, source, url, codes):
     u = json.loads(UPDATES.read_text(encoding="utf-8"))
     u["items"].insert(0, {"date": TODAY.isoformat(), "tag": tag, "text": text.strip(),
                           "source": source.strip(), "url": url.strip(), "codes": codes})
     UPDATES.write_text(json.dumps(u, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"✓ 跑馬燈新增一則：{text.strip()}")
+
+
+def cmd_fix(iid, text, conf, typ, ticker, source, url, expect, codes):
+    """改說法一定附上查證過的來源：先核對來源，再一次寫進資料與跑馬燈，不會只改一半。"""
+    d = json.loads(format_chain.CHAIN.read_text(encoding="utf-8"))
+    _, kind, obj, field, title = find(d, iid)
+    if conf and (conf not in CONFS or kind not in ("edge", "common")):
+        sys.exit(f"可信度只能用在關聯線，而且只有 {sorted(CONFS)}")
+    if typ and (typ not in TYPES or kind not in ("edge", "common")):
+        sys.exit(f"型態只能用在關聯線，而且只有 {sorted(TYPES)}")
+    codes = parse_codes(d, codes)
+    check_source(url, expect)
+    if text:
+        obj[field] = text.strip()
+    if conf:
+        obj["conf"] = conf
+    if typ:
+        obj["type"] = typ
+    stamp(obj)
+    format_chain.write(d)
+    add_ticker("fix", ticker, source, url, codes)
+    print(f"✎ {title}：已修正並蓋上 {TODAY}")
+
+
+def cmd_ticker(tag, text, source, url, codes, expect):
+    if tag not in ("new", "fix", "news"):
+        sys.exit("tag 只能是 new、fix、news")
+    codes = parse_codes(json.loads(format_chain.CHAIN.read_text(encoding="utf-8")), codes)
+    check_source(url, expect)
+    add_ticker(tag, text, source, url, codes)
 
 
 def summarize():
@@ -212,8 +267,11 @@ def main():
     o = sub.add_parser("ok"); o.add_argument("ids", nargs="+")
     f = sub.add_parser("fix"); f.add_argument("id"); f.add_argument("--text")
     f.add_argument("--conf"); f.add_argument("--type")
+    f.add_argument("--ticker", required=True); f.add_argument("--source", required=True)
+    f.add_argument("--url", required=True); f.add_argument("--expect", required=True); f.add_argument("--codes")
     t = sub.add_parser("ticker"); t.add_argument("--tag", required=True); t.add_argument("--text", required=True)
-    t.add_argument("--source", required=True); t.add_argument("--url", required=True); t.add_argument("--codes")
+    t.add_argument("--source", required=True); t.add_argument("--url", required=True)
+    t.add_argument("--expect", required=True); t.add_argument("--codes")
     sub.add_parser("finish")
     a = ap.parse_args()
     if a.cmd == "start":
@@ -223,9 +281,9 @@ def main():
     elif a.cmd == "fix":
         if not (a.text or a.conf or a.type):
             sys.exit("fix 至少要給 --text、--conf、--type 其中一個")
-        cmd_fix(a.id, a.text, a.conf, a.type)
+        cmd_fix(a.id, a.text, a.conf, a.type, a.ticker, a.source, a.url, a.expect, a.codes)
     elif a.cmd == "ticker":
-        cmd_ticker(a.tag, a.text, a.source, a.url, a.codes)
+        cmd_ticker(a.tag, a.text, a.source, a.url, a.codes, a.expect)
     else:
         cmd_finish()
 

@@ -22,6 +22,9 @@ STALE_DAYS = 90          # 關聯線超過這個天數沒複查就列入待辦
 QUOTE_STALE_DAYS = 12    # 收盤日距今超過這麼多天就是抓取出問題。
                          # 不能設太短：春節休市常連續六到九天，設 5 天會在過年期間擋掉所有發布
 MOVE_ALERT = 15.0        # 單日漲跌超過這個百分比，值得人看一眼
+# AI 生成的頁面只能當線索，不能當來源（review.py 也用這份清單）
+AI_PAGE_URL = ("technews.tw/ai-agent/", "#ai-qa", "perplexity.ai", "chatgpt.com", "chat.openai.com",
+               "gemini.google.com", "notebooklm.google", "copilot.microsoft.com", "grok.com")
 
 errors, warns = [], []
 E = errors.append
@@ -157,6 +160,8 @@ def check_updates(nodes):
             E(f"{where} 的 tag 只能是 new／fix／news：{it.get('tag')!r}")
         if not str(it.get("url", "")).startswith("https://"):
             E(f"{where} 的來源不是 https 連結：{it.get('url')!r}")
+        if any(p in str(it.get("url", "")) for p in AI_PAGE_URL):
+            E(f"{where} 引用的是 AI 生成的頁面，只能當線索，不能當來源：{it.get('url')}")
         try:
             age = (TODAY - dt.date.fromisoformat(it.get("date", ""))).days
             if age > 60:
