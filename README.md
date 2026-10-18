@@ -2,7 +2,7 @@
   <img src="media/rings-demo.gif" width="360" alt="爆炸環操作示範：點一層圓盤浮出來，點台積電與輝達，連到上下游的線跨層亮起">
 </p>
 
-<h1 align="center">台股 AI 供應鏈地層剖面</h1>
+<h1 align="center">台股 AI 供應鏈<br>地層剖面</h1>
 
 <p align="center">
   <b>一張圖，看懂台股 AI 的錢往哪裡流。</b><br>
