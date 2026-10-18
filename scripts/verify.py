@@ -77,7 +77,10 @@ def check_chain(chain):
                 E(f"關聯線指向不存在的節點：{e['from']} → {e['to']}（{e[side]}）")
         if e["type"] not in types:
             E(f"未知的線型 {e['type']}：{e['from']} → {e['to']}")
-        if e.get("conf") and e["conf"] not in confs:
+        if not e.get("conf"):
+            # 留白的線會被讀成已確認的關係。曾有一條聯發科—達發同集團線漏標，自檢沒抓到
+            E(f"關聯線缺少可信度：{e['from']} → {e['to']}（{e['type']}）")
+        elif e["conf"] not in confs:
             E(f"未知的可信度 {e['conf']}：{e['from']} → {e['to']}")
 
     # 同一對節點、同一種關係只能有一條。方向相反也算重複，

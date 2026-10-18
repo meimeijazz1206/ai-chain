@@ -729,7 +729,7 @@
     {"from": "CPO", "to": "5347", "type": "supply", "note": "光子晶片 PIC 用成熟製程節點", "conf": "common", "checked": "2026-09-16"},
     {"from": "NVDA", "to": "CPO", "type": "alliance", "note": "交換器世代導入共同封裝光學", "conf": "reported", "checked": "2026-09-16"},
     {"from": "NVDA", "to": "6526", "type": "supply", "note": "高速 SerDes 與乙太互連", "conf": "inferred", "checked": "2026-09-16"},
-    {"from": "2454", "to": "6526", "type": "group", "note": "聯發科持有達發約七成股權", "checked": "2026-09-16"},
+    {"from": "2454", "to": "6526", "type": "group", "note": "達發官網自述為聯發科子公司，主攻固網寬頻與 AIoT 晶片", "checked": "2026-10-19", "conf": "disclosed"},
     {"from": "2330", "to": "6683", "type": "supply", "note": "測試介面與治具", "conf": "common", "checked": "2026-09-16"},
     {"from": "2454", "to": "6533", "type": "substitute", "note": "CPU IP 路線與自研核心的取捨", "conf": "common"},
     {"from": "6526", "to": "8040", "type": "group", "note": "九暘為達發子公司", "conf": "disclosed", "checked": "2026-09-16"},
