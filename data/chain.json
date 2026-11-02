@@ -254,7 +254,7 @@
             {"code": "6187", "name": "萬潤", "role": "點膠與封裝設備", "purity": 3, "bottleneck": 3, "subst": 3, "kind": "company"},
             {"code": "2467", "name": "志聖", "role": "烘烤與曝光設備", "purity": 3, "bottleneck": 3, "subst": 3, "kind": "company"},
             {"code": "3680", "name": "家登", "role": "EUV 光罩盒，全球主要供應者之一", "purity": 3, "bottleneck": 5, "subst": 1, "kind": "company"},
-            {"code": "1560", "name": "中砂", "role": "鑽石碟與再生晶圓", "purity": 2, "bottleneck": 3, "subst": 3, "kind": "company"},
+            {"code": "1560", "name": "中砂", "role": "鑽石碟與再生晶圓", "purity": 2, "bottleneck": 3, "subst": 3, "kind": "company", "checked": "2026-11-02"},
             {"code": "5434", "name": "崇越", "role": "半導體材料通路", "purity": 2, "bottleneck": 2, "subst": 4, "cross": ["L3", "L8"], "kind": "company"},
             {"code": "3587", "name": "閎康", "role": "材料檢測分析，先進封裝驗證需求", "purity": 3, "bottleneck": 3, "subst": 3, "kind": "company"},
             {"code": "5443", "name": "均豪", "role": "自動化與面板級封裝設備", "purity": 3, "bottleneck": 3, "subst": 3, "cross": ["L3", "L5"], "kind": "company"}
@@ -489,7 +489,7 @@
         {
           "name": "重電與變壓器",
           "nodes": [
-            {"code": "1519", "name": "華城", "role": "變壓器出口美國，交期長訂單能見度高", "purity": 3, "bottleneck": 5, "subst": 2, "kind": "company"},
+            {"code": "1519", "name": "華城", "role": "變壓器出口美國，交期長訂單能見度高", "purity": 3, "bottleneck": 5, "subst": 2, "kind": "company", "checked": "2026-11-02"},
             {"code": "1503", "name": "士電", "role": "重電與馬達", "purity": 2, "bottleneck": 4, "subst": 2, "kind": "company", "checked": "2026-10-16"},
             {"code": "1513", "name": "中興電", "role": "氣體絕緣開關與統包工程", "purity": 2, "bottleneck": 4, "subst": 2, "kind": "company", "checked": "2026-10-16"},
             {"code": "1514", "name": "亞力", "role": "配電盤與電力設備", "purity": 2, "bottleneck": 3, "subst": 3, "kind": "company", "checked": "2026-10-16"},
@@ -500,7 +500,7 @@
         {
           "name": "電線電纜",
           "nodes": [
-            {"code": "1605", "name": "華新", "role": "電纜與不鏽鋼", "purity": 1, "bottleneck": 3, "subst": 3, "kind": "company"},
+            {"code": "1605", "name": "華新", "role": "電纜與不鏽鋼", "purity": 1, "bottleneck": 3, "subst": 3, "kind": "company", "checked": "2026-11-02"},
             {"code": "1609", "name": "大亞", "role": "電線電纜與綠能", "purity": 1, "bottleneck": 2, "subst": 4, "kind": "company"}
           ]
         },
@@ -565,10 +565,10 @@
           "name": "機器人與自動化",
           "nodes": [
             {"code": "2049", "name": "上銀", "role": "滾珠螺桿與線性傳動，人形機器人關鍵件", "purity": 2, "bottleneck": 4, "subst": 2, "kind": "company"},
-            {"code": "1597", "name": "直得", "role": "線性滑軌", "purity": 2, "bottleneck": 3, "subst": 3, "kind": "company"},
+            {"code": "1597", "name": "直得", "role": "線性滑軌", "purity": 2, "bottleneck": 3, "subst": 3, "kind": "company", "checked": "2026-11-02"},
             {"code": "2359", "name": "所羅門", "role": "機器視覺與 AI 取放", "purity": 3, "bottleneck": 3, "subst": 3, "kind": "company"},
             {"code": "6188", "name": "廣明", "role": "協作機器人", "purity": 2, "bottleneck": 3, "subst": 3, "kind": "company"},
-            {"code": "1590", "name": "亞德客-KY", "role": "氣動元件", "purity": 1, "bottleneck": 3, "subst": 3, "kind": "company"}
+            {"code": "1590", "name": "亞德客-KY", "role": "氣動元件", "purity": 1, "bottleneck": 3, "subst": 3, "kind": "company", "checked": "2026-11-02"}
           ]
         },
         {
