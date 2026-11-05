@@ -2,6 +2,30 @@
   "note": "跑馬燈資料。每一筆都要有可點的原始來源，text 用自己的話寫，不照抄標題。tag 只有三種：new 新增、fix 修正、news 動態。codes 是相關個股，點文字會跳到那一檔。",
   "items": [
     {
+      "date": "2026-11-05",
+      "tag": "news",
+      "text": "Northflank 11/2 更新：調查指向控制層保存的敏感資訊，已有 AI 金鑰遭未授權使用通報，要求客戶輪替整合與專案憑證。",
+      "source": "Northflank 官方狀態公告",
+      "url": "https://status.northflank.com/",
+      "codes": []
+    },
+    {
+      "date": "2026-11-05",
+      "tag": "news",
+      "text": "Zeabur 10/19 公布入侵報告：10/14–15 平台環境變數與帳號資料遭讀取，呼籲客戶輪替保存於平台的密碼與金鑰。",
+      "source": "Zeabur 官方事件報告",
+      "url": "https://zeabur.com/blogs/october-2026-security-incident",
+      "codes": []
+    },
+    {
+      "date": "2026-11-05",
+      "tag": "news",
+      "text": "資安署 10/22 提醒 PHP 兩項重大漏洞，CVSS 均達 9.2；機關與企業應盤點 PHP 系統、儘速更新，並檢視存取日誌。",
+      "source": "數位發展部資通安全署",
+      "url": "https://web.moda.gov.tw/ACS/press/news/press/21134",
+      "codes": []
+    },
+    {
       "date": "2026-10-19",
       "tag": "fix",
       "text": "聯發科與達發的同集團線補上可信度（公司揭露），改引用達發官網，拿掉沒有最新出處的持股比",
